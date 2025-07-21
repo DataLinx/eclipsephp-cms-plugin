@@ -1,0 +1,26 @@
+#file: noinspection ComposeUnknownKeys
+name: eclipsephp-plugin-template
+services:
+  appserver:
+    type: php:custom
+    xdebug: "debug,develop,coverage"
+    via: cli
+    overrides:
+      image: slimdeluxe/php:8.2-v1.2
+tooling:
+  php:
+    service: appserver
+  composer:
+    service: appserver
+  test:
+    service: appserver
+    description: Run tests
+    cmd: "composer test"
+  format:
+    service: appserver
+    description: Fix code style issues
+    cmd: "composer format"
+  testbench:
+    service: appserver
+    description: Run testbench CLI
+    cmd: "vendor/bin/testbench"

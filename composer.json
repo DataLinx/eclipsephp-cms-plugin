@@ -1,0 +1,86 @@
+{
+    "name": "eclipsephp/plugin-template",
+    "description": "Eclipse template for Filament plugins",
+    "keywords": [
+        "eclipse",
+        "filament",
+        "laravel"
+    ],
+    "homepage": "https://github.com/DataLinx/eclipsephp-plugin-template",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "DataLinx",
+            "email": "info@datalinx.si"
+        }
+    ],
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Eclipse\\PluginTemplate\\": "src/",
+            "Eclipse\\PluginTemplate\\Factories\\": "database/factories/",
+            "Eclipse\\PluginTemplate\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "bezhansalleh/filament-shield": "^3.3",
+        "datalinx/php-utils": "^2.5",
+        "eclipsephp/common": "dev-main",
+        "filament/filament": "^3.3",
+        "spatie/laravel-package-tools": "^1.19"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.21",
+        "orchestra/testbench": "^10.1",
+        "pestphp/pest": "^3.7",
+        "pestphp/pest-plugin-livewire": "^3.0"
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "post-install-cmd": "@setup",
+        "post-update-cmd": "@setup",
+        "format": "vendor/bin/pint",
+        "test": "vendor/bin/testbench package:test",
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "setup": [
+            "@php vendor/bin/testbench vendor:publish --provider='Spatie\\Permission\\PermissionServiceProvider'",
+            "@php vendor/bin/testbench vendor:publish --tag='filament-shield-config'",
+            "@php vendor/bin/testbench package:sync-skeleton"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Eclipse\\PluginTemplate\\PluginTemplateServiceProvider"
+            ]
+        }
+    }
+}
