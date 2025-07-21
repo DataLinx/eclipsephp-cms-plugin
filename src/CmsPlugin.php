@@ -1,15 +1,15 @@
 <?php
 
-namespace Eclipse\PluginTemplate;
+namespace Eclipse\Cms;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 
-class PluginTemplate implements Plugin
+class CmsPlugin implements Plugin
 {
     public function getId(): string
     {
-        return 'plugin-template';
+        return 'eclipse-cms';
     }
 
     public function register(Panel $panel): void

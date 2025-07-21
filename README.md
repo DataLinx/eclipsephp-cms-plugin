@@ -1,19 +1,26 @@
-# Eclipse Filament plugin template
+# Eclipse Filament CMS plugin
 
-![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/eclipsephp/plugin-template)
-![Packagist Version](https://img.shields.io/packagist/v/eclipsephp/plugin-template)
-![Packagist Downloads](https://img.shields.io/packagist/dt/eclipsephp/plugin-template)
-[![Tests](https://github.com/DataLinx/eclipsephp-plugin-template/actions/workflows/test-runner.yml/badge.svg)](https://github.com/DataLinx/eclipsephp-plugin-template/actions/workflows/test-runner.yml)
-[![codecov](https://codecov.io/gh/DataLinx/eclipsephp-plugin-template/graph/badge.svg?token=1HKSY5O6IW)](https://codecov.io/gh/DataLinx/eclipsephp-plugin-template)
+![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/eclipsephp/cms-plugin)
+![Packagist Version](https://img.shields.io/packagist/v/eclipsephp/cms-plugin)
+![Packagist Downloads](https://img.shields.io/packagist/dt/eclipsephp/cms-plugin)
+[![Tests](https://github.com/DataLinx/eclipsephp-cms-plugin/actions/workflows/test-runner.yml/badge.svg)](https://github.com/DataLinx/eclipsephp-cms-plugin/actions/workflows/test-runner.yml)
+[![codecov](https://codecov.io/gh/DataLinx/eclipsephp-cms-plugin/graph/badge.svg?token=1HKSY5O6IW)](https://codecov.io/gh/DataLinx/eclipsephp-cms-plugin)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
-![Packagist License](https://img.shields.io/packagist/l/eclipsephp/plugin-template)
+![Packagist License](https://img.shields.io/packagist/l/eclipsephp/cms-plugin)
 
 ## About
-This package serves as a Filament plugin template for plugins developed by DataLinx for [Eclipse](https://github.com/DataLinx/eclipsephp-app), our web app based on Filament. It is also a reference of how such a package should be configured.
+Filament plugin for product catalogue data.
 
-The template is opinionated — it's based on our tech stack, which includes JetBrains PhpStorm.
-
-This template works on and expands our [PHP package template](https://github.com/DataLinx/php-package-template).
+* 🟧 Pages and simple sections (WIP)
+* 🟧 Menus (WIP) — create hierarhical and sortable list of links  
+* 🟧 Banners (WIP)  
+* ⏳ Page tags (planned) — tag pages and browse them by tags  
+* ⏳ Blog section (planned)  
+* ⏳ News section (planned)  
+* ⏳ Document section (planned) — versioned documents  
+* ⏳ Locations section (planned)  
+* ⏳ Photo gallery section (planned)  
+* ⏳ Other resources coming when needed ([suggest a feature](https://github.com/DataLinx/eclipsephp-cms-plugin/discussions) and/or [hire us](https://www.datalinx.si))
 
 ## Requirements
 - PHP >= 8.2 (due to Pest 3 requirement)
@@ -22,12 +29,35 @@ This template works on and expands our [PHP package template](https://github.com
 
 See [composer.json](composer.json) for details.
 
-## Getting started
-* Download it with composer:
+## Installation
+1. Download the plugin with composer:
 ```shell
-  composer require eclipsephp/plugin-template
+  composer require eclipsephp/cms-plugin
 ````
-* _Provide a simple example how to use the package._
+2. Add it to your panel's plugins:
+```php
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        $panel
+            ->default()
+            ->id('admin')
+            ->path('admin')
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->plugins([
+                \Eclipse\Cms\CmsPlugin::make(),
+            ]);
+
+        return $panel;
+    }
+}
+```
+3. Run migrations
+```shell
+php artisan migrate
+```
 
 ## Contributing
 
@@ -38,21 +68,27 @@ Should you want to contribute, please see the development guidelines in the [Dat
 
 ### Development
 
+1. All development is subject to our [PHP package development guidelines](https://github.com/DataLinx/php-package-template/blob/bc39ae340e7818614ae2aaa607e97088318dd754/docs/Documentation.md).
+2. Our [Filament app development docs](https://datalinx.github.io/eclipsephp-app/) will also be helpful.
+3. Any PRs will generally need to adhere to these before being merged.
+
 #### Requirements
-* Linux, Mac or Windows with WSL
-* [Lando](https://lando.dev/) (optional, but easier to start with)
+See [here](https://datalinx.github.io/eclipsephp-app/introduction/requirements.html).
 
 #### Get started
 1. Clone the git repo
 2. Start the Lando container
-```shell
-  lando start
-````
+    ```shell
+    lando start
+    ````
 3. Install dependencies (this also runs the setup composer script)
-```shell
-  lando composer install
-````
-4. Happy coding 😉
+    ```shell
+    lando composer install
+    ````
+4. You can now develop and run tests. Happy coding 😉
+
+💡 To manually test the plugin in the browser, see our [recommendation](https://datalinx.github.io/eclipsephp-app/plugin-development/setting-up.html), which is also [how Filament suggests package development](https://filamentphp.com/docs/3.x/support/contributing#developing-with-a-local-copy-of-filament).  
+However, the plugin should be universal and not dependent on our app setup or core package.
 
 ### Changelog
 All notable changes to this project are automatically documented in the [CHANGELOG.md](CHANGELOG.md) file using the release workflow, based on the [release-please](https://github.com/googleapis/release-please) GitHub action.

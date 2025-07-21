@@ -1,12 +1,13 @@
 {
-    "name": "eclipsephp/plugin-template",
-    "description": "Eclipse template for Filament plugins",
+    "name": "eclipsephp/cms-plugin",
+    "description": "CMS plugin for Filament",
     "keywords": [
         "eclipse",
         "filament",
-        "laravel"
+        "laravel",
+        "cms"
     ],
-    "homepage": "https://github.com/DataLinx/eclipsephp-plugin-template",
+    "homepage": "https://github.com/DataLinx/eclipsephp-cms-plugin",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -26,9 +27,9 @@
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
-            "Eclipse\\PluginTemplate\\": "src/",
-            "Eclipse\\PluginTemplate\\Factories\\": "database/factories/",
-            "Eclipse\\PluginTemplate\\Seeders\\": "database/seeders/"
+            "Eclipse\\Cms\\": "src/",
+            "Eclipse\\Cms\\Factories\\": "database/factories/",
+            "Eclipse\\Cms\\Seeders\\": "database/seeders/"
         }
     },
     "autoload-dev": {
@@ -79,7 +80,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Eclipse\\PluginTemplate\\PluginTemplateServiceProvider"
+                "Eclipse\\Cms\\CmsServiceProvider"
             ]
         }
     }

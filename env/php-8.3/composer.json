@@ -1,5 +1,5 @@
 {
-    "name": "eclipsephp/plugin-template",
+    "name": "eclipsephp/cms-plugin",
     "require": {
         "wikimedia/composer-merge-plugin": "dev-master"
     },
@@ -12,7 +12,7 @@
         },
         "laravel": {
             "providers": [
-                "Eclipse\\PluginTemplate\\PluginTemplateServiceProvider"
+                "Eclipse\\Cms\\CmsServiceProvider"
             ]
         }
     },
@@ -25,9 +25,9 @@
     },
     "autoload": {
         "psr-4": {
-            "Eclipse\\PluginTemplate\\": "src/",
-            "Eclipse\\PluginTemplate\\Factories\\": "database/factories/",
-            "Eclipse\\PluginTemplate\\Seeders\\": "database/seeders/"
+            "Eclipse\\Cms\\": "src/",
+            "Eclipse\\Cms\\Factories\\": "database/factories/",
+            "Eclipse\\Cms\\Seeders\\": "database/seeders/"
         }
     },
     "autoload-dev": {

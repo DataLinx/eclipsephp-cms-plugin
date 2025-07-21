@@ -1,5 +1,5 @@
-#file: noinspection ComposeUnknownKeys
-name: eclipsephp-plugin-template-8.3
+#file: noinspection ComposeUnknownKeys,YAMLSchemaValidation
+name: eclipsephp-cms-plugin-8.3
 services:
   appserver:
     type: php:custom
