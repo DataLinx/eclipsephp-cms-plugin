@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('cms_sections', function (Blueprint $table) {
@@ -16,9 +17,9 @@ return new class extends Migration {
                 /** @var \Illuminate\Database\Eloquent\Model $tenant */
                 $tenant = new $tenantClass;
                 $table->foreignId(config('eclipse-cms.tenancy.foreign_key'))
-                        ->constrained($tenant->getTable(), $tenant->getKeyName())
-                        ->cascadeOnUpdate()
-                        ->cascadeOnDelete();
+                    ->constrained($tenant->getTable(), $tenant->getKeyName())
+                    ->cascadeOnUpdate()
+                    ->cascadeOnDelete();
             }
 
             $table->string('name');

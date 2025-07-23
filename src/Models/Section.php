@@ -36,5 +36,4 @@ class Section extends Model
     {
         return SectionFactory::new();
     }
-
 }
