@@ -2,8 +2,8 @@
 
 namespace Eclipse\Cms\Models\Menu;
 
-use Eclipse\Cms\Models\Menu;
 use Eclipse\Cms\Enums\MenuItemType;
+use Eclipse\Cms\Models\Menu;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
