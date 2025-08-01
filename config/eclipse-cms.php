@@ -8,8 +8,8 @@ return [
     |--------------------------------------------------------------------------
     */
     'tenancy' => [
-        'enabled' => false,
-        'model' => null,
-        'foreign_key' => null,
+        'enabled' => true,
+        'model' => 'Eclipse\\Core\\Models\\Site',
+        'foreign_key' => 'site_id',
     ],
 ];
