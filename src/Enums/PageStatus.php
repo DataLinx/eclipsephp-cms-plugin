@@ -4,10 +4,10 @@ namespace Eclipse\Cms\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum PageStatus implements HasLabel
+enum PageStatus: string implements HasLabel
 {
-    case Draft;
-    case Published;
+    case Draft = 'draft';
+    case Published = 'published';
 
     public function getLabel(): ?string
     {

@@ -2,7 +2,6 @@
 
 namespace Workbench\App\Providers;
 
-use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Eclipse\Cms\CmsPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -44,7 +43,6 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->plugins([
-                FilamentShieldPlugin::make(),
                 CmsPlugin::make(),
             ])
             ->pages([
