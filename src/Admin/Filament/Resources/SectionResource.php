@@ -1,10 +1,10 @@
 <?php
 
-namespace Eclipse\Cms\Filament\Resources;
+namespace Eclipse\Cms\Admin\Filament\Resources;
 
+use Eclipse\Cms\Admin\Filament\Resources\SectionResource\Pages;
+use Eclipse\Cms\Admin\Filament\Resources\SectionResource\RelationManagers;
 use Eclipse\Cms\Enums\SectionType;
-use Eclipse\Cms\Filament\Resources\SectionResource\Pages;
-use Eclipse\Cms\Filament\Resources\SectionResource\RelationManagers;
 use Eclipse\Cms\Models\Section;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section as FormSection;
@@ -22,10 +22,10 @@ use Filament\Tables\Actions\ForceDeleteBulkAction;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class SectionResource extends Resource
@@ -36,11 +36,11 @@ class SectionResource extends Resource
 
     protected static ?string $slug = 'cms/sections';
 
+    protected static ?string $navigationIcon = 'heroicon-o-folder';
+
     protected static ?string $navigationGroup = 'CMS';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static bool $shouldRegisterNavigation = true;
 
     protected static ?string $navigationLabel = 'Sections';
 
@@ -48,7 +48,7 @@ class SectionResource extends Resource
     {
         return $form
             ->schema([
-                FormSection::make()
+                FormSection::make('Basic Information')
                     ->schema([
                         TextInput::make('name')
                             ->label('Section Name')
@@ -79,7 +79,7 @@ class SectionResource extends Resource
 
                         Placeholder::make('pages_count')
                             ->label('Total Pages')
-                            ->content(fn (?Section $record): string => $record ? $record->pages()->count().' pages' : '-'),
+                            ->content(fn (?Section $record): string => $record?->pages()->count().' pages' ?? '-'),
                     ])
                     ->columns(3)
                     ->compact()
@@ -105,8 +105,8 @@ class SectionResource extends Resource
                 TextColumn::make('pages_count')
                     ->label('Pages')
                     ->counts('pages')
-                    ->sortable()
-                    ->alignCenter(),
+                    ->badge()
+                    ->color('gray'),
 
                 TextColumn::make('created_at')
                     ->label('Created')
@@ -121,6 +121,9 @@ class SectionResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
+                SelectFilter::make('type')
+                    ->options(SectionType::class),
+
                 TrashedFilter::make(),
             ])
             ->actions([
@@ -138,15 +141,6 @@ class SectionResource extends Resource
             ]);
     }
 
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListSections::route('/'),
-            'create' => Pages\CreateSection::route('/create'),
-            'edit' => Pages\EditSection::route('/{record}/edit'),
-        ];
-    }
-
     public static function getRelations(): array
     {
         return [
@@ -154,13 +148,13 @@ class SectionResource extends Resource
         ];
     }
 
-    public static function getRelatedUrl(string $relation, Model $record): string
+    public static function getPages(): array
     {
-        if ($relation === 'pages') {
-            return PageResource::getUrl('index', ['tableFilters' => ['section' => ['value' => $record->id]]]);
-        }
-
-        return parent::getRelatedUrl($relation, $record);
+        return [
+            'index' => Pages\ListSections::route('/'),
+            'create' => Pages\CreateSection::route('/create'),
+            'edit' => Pages\EditSection::route('/{record}/edit'),
+        ];
     }
 
     public static function getEloquentQuery(): Builder

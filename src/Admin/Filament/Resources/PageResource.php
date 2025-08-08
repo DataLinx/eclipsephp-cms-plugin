@@ -1,9 +1,9 @@
 <?php
 
-namespace Eclipse\Cms\Filament\Resources;
+namespace Eclipse\Cms\Admin\Filament\Resources;
 
+use Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages;
 use Eclipse\Cms\Enums\PageStatus;
-use Eclipse\Cms\Filament\Resources\PageResource\Pages;
 use Eclipse\Cms\Models\Page;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -61,7 +61,10 @@ class PageResource extends Resource
                             ->live(onBlur: true)
                             ->afterStateUpdated(function (string $operation, $state, $set) {
                                 if ($operation === 'create' && $state) {
-                                    $set('sef_key', Str::slug($state));
+                                    $slug = is_array($state) ? ($state['en'] ?? '') : $state;
+                                    if ($slug) {
+                                        $set('sef_key', Str::slug($slug));
+                                    }
                                 }
                             })
                             ->columnSpan(2),
@@ -69,7 +72,6 @@ class PageResource extends Resource
                         Select::make('section_id')
                             ->label('Section')
                             ->relationship('section', 'name')
-                            ->required()
                             ->searchable()
                             ->preload()
                             ->native(false)

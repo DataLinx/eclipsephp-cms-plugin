@@ -4,9 +4,6 @@ namespace Eclipse\Cms\Models;
 
 use Eclipse\Cms\Enums\SectionType;
 use Eclipse\Cms\Factories\SectionFactory;
-use Eclipse\Common\Foundation\Models\IsSearchable;
-use Eclipse\Core\Models\Site;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +13,7 @@ use Spatie\Translatable\HasTranslations;
 
 class Section extends Model
 {
-    use HasFactory, HasTranslations, IsSearchable, SoftDeletes;
+    use HasFactory, HasTranslations, SoftDeletes;
 
     protected $table = 'cms_sections';
 
@@ -46,42 +43,14 @@ class Section extends Model
         return $this->hasMany(Page::class);
     }
 
-    public function site(): BelongsTo
-    {
-        $siteModel = config('eclipse-cms.tenancy.model', Site::class);
-
-        return $this->belongsTo($siteModel);
-    }
-
-    protected static function booted()
-    {
-        if (config('eclipse-cms.tenancy.enabled') && app()->bound('filament')) {
-            static::addGlobalScope('site', function (Builder $builder) {
-                if ($tenant = filament()->getTenant()) {
-                    $builder->where(config('eclipse-cms.tenancy.foreign_key'), $tenant->getKey());
-                }
-            });
-
-            static::creating(function (Section $section) {
-                if ($tenant = filament()->getTenant()) {
-                    $section->{config('eclipse-cms.tenancy.foreign_key')} = $tenant->getKey();
-                }
-            });
-        }
-    }
-
     protected static function newFactory(): SectionFactory
     {
         return SectionFactory::new();
     }
 
-    public function toSearchableArray(): array
+    /** @return BelongsTo<\Eclipse\Core\Models\Site, self> */
+    public function site(): BelongsTo
     {
-        return [
-            'id' => $this->id,
-            'name' => $this->getTranslations('name'),
-            'type' => $this->type->value,
-            'site_id' => $this->site_id,
-        ];
+        return $this->belongsTo(\Eclipse\Core\Models\Site::class);
     }
 }

@@ -37,15 +37,8 @@ class Site extends Model
         return $this->hasMany(\Eclipse\Cms\Models\Section::class, 'site_id');
     }
 
-    public function pages()
+    public function pages(): HasMany
     {
-        return $this->hasManyThrough(
-            \Eclipse\Cms\Models\Page::class,
-            \Eclipse\Cms\Models\Section::class,
-            'site_id', // Foreign key on sections table
-            'section_id', // Foreign key on pages table
-            'id', // Local key on sites table
-            'id' // Local key on sections table
-        );
+        return $this->hasMany(\Eclipse\Cms\Models\Page::class, 'site_id');
     }
 }

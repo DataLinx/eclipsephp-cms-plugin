@@ -14,15 +14,12 @@ return new class extends Migration
 
             if (config('eclipse-cms.tenancy.enabled')) {
                 $tenantClass = config('eclipse-cms.tenancy.model');
-                if (class_exists($tenantClass)) {
-                    $tenant = new $tenantClass;
-                    $table->foreignId(config('eclipse-cms.tenancy.foreign_key'))
-                        ->constrained($tenant->getTable(), $tenant->getKeyName())
-                        ->cascadeOnUpdate()
-                        ->cascadeOnDelete();
-                } else {
-                    $table->unsignedBigInteger(config('eclipse-cms.tenancy.foreign_key'))->nullable();
-                }
+                /** @var \Illuminate\Database\Eloquent\Model $tenant */
+                $tenant = new $tenantClass;
+                $table->foreignId(config('eclipse-cms.tenancy.foreign_key'))
+                    ->constrained($tenant->getTable(), $tenant->getKeyName())
+                    ->cascadeOnUpdate()
+                    ->cascadeOnDelete();
             }
 
             $table->string('name');

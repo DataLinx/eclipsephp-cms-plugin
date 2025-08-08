@@ -1,16 +1,16 @@
 <?php
 
-namespace Eclipse\Cms\Filament\Resources\SectionResource\Pages;
+namespace Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages;
 
-use Eclipse\Cms\Filament\Resources\SectionResource;
+use Eclipse\Cms\Admin\Filament\Resources\PageResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateSection extends CreateRecord
+class CreatePage extends CreateRecord
 {
     use CreateRecord\Concerns\Translatable;
 
-    protected static string $resource = SectionResource::class;
+    protected static string $resource = PageResource::class;
 
     protected function getHeaderActions(): array
     {

@@ -89,4 +89,20 @@ class SectionPolicy
     {
         return $user->can('restore_any_section');
     }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(Authorizable $user, Section $section): bool
+    {
+        return $user->can('replicate_section');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(Authorizable $user): bool
+    {
+        return $user->can('reorder_section');
+    }
 }

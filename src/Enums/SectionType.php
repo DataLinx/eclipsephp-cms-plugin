@@ -11,7 +11,7 @@ enum SectionType: string implements HasLabel
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::Pages => 'Pages',
+            self::Pages => 'Pages'
         };
     }
 }

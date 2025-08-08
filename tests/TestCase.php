@@ -2,11 +2,11 @@
 
 namespace Tests;
 
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as BaseTestCase;
-use Workbench\App\Models\Site;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Workbench\App\Models\User;
 
 abstract class TestCase extends BaseTestCase
@@ -23,17 +23,15 @@ abstract class TestCase extends BaseTestCase
 
         $this->withoutVite();
 
-        // Override config for testing
+        config(['eclipse-cms.tenancy.enabled' => false]);
         config(['eclipse-cms.tenancy.model' => 'Workbench\\App\\Models\\Site']);
+        config(['eclipse-cms.tenancy.foreign_key' => 'site_id']);
+        config(['app.key' => 'base64:'.base64_encode('12345678901234567890123456789012')]);
 
         // Disable Scout during tests
         config(['scout.driver' => null]);
-
     }
 
-    /**
-     * Run database migrations
-     */
     protected function migrate(): self
     {
         $this->artisan('migrate');
@@ -41,67 +39,59 @@ abstract class TestCase extends BaseTestCase
         return $this;
     }
 
-    /**
-     * Set up default "super admin" user and tenant (site)
-     */
     protected function set_up_super_admin_and_tenant(): self
     {
-        // Ensure we have at least one site
-        $site = Site::first();
-        if (! $site) {
-            $site = Site::factory()->create(['is_default' => true]);
-        }
-
+        $this->migrate();
         $this->superAdmin = User::factory()->create();
-        $this->superAdmin->sites()->attach($site);
+        $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
 
-        // Create super_admin role and assign to user
-        $superAdminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'super_admin']);
+        $permissions = [
+            'view_any_page', 'view_page', 'create_page', 'update_page', 'delete_page', 'restore_page', 'force_delete_page',
+            'view_any_section', 'view_section', 'create_section', 'update_section', 'delete_section', 'restore_section', 'force_delete_section',
+        ];
 
-        // Give super admin all CMS permissions
-        $superAdminRole->givePermissionTo([
-            'view_any_section',
-            'view_section',
-            'create_section',
-            'update_section',
-            'delete_section',
-            'view_any_page',
-            'view_page',
-            'create_page',
-            'update_page',
-            'delete_page',
-        ]);
-
-        $this->superAdmin->assignRole('super_admin');
-
-        $this->actingAs($this->superAdmin);
-
-        if ($site) {
-            Filament::setTenant($site);
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
+
+        $role->syncPermissions($permissions);
+        $this->superAdmin->assignRole($role);
+        $this->actingAs($this->superAdmin);
 
         return $this;
     }
 
-    /**
-     * Set up a common user with no roles or permissions
-     */
     protected function set_up_common_user_and_tenant(): self
     {
-        // Ensure we have at least one site
-        $site = Site::first();
-        if (! $site) {
-            $site = Site::factory()->create(['is_default' => true]);
-        }
-
+        $this->migrate();
         $this->user = User::factory()->create();
-        $this->user->sites()->attach($site);
-
         $this->actingAs($this->user);
 
-        if ($site) {
-            Filament::setTenant($site);
+        return $this;
+    }
+
+    protected function set_up_user_without_permissions(): self
+    {
+        $this->migrate();
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user);
+
+        return $this;
+    }
+
+    protected function set_up_user_with_permissions(array $permissions): self
+    {
+        $this->migrate();
+        $this->user = User::factory()->create();
+        $role = Role::firstOrCreate(['name' => 'test_role', 'guard_name' => 'web']);
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
+
+        $role->syncPermissions($permissions);
+        $this->user->assignRole('test_role');
+        $this->actingAs($this->user);
 
         return $this;
     }

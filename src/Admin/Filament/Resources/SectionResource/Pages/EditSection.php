@@ -1,8 +1,8 @@
 <?php
 
-namespace Eclipse\Cms\Filament\Resources\SectionResource\Pages;
+namespace Eclipse\Cms\Admin\Filament\Resources\SectionResource\Pages;
 
-use Eclipse\Cms\Filament\Resources\SectionResource;
+use Eclipse\Cms\Admin\Filament\Resources\SectionResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -16,6 +16,7 @@ class EditSection extends EditRecord
     {
         return [
             Actions\LocaleSwitcher::make(),
+            Actions\ViewAction::make(),
             Actions\DeleteAction::make(),
             Actions\ForceDeleteAction::make(),
             Actions\RestoreAction::make(),

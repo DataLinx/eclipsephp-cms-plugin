@@ -2,14 +2,13 @@
 
 namespace Eclipse\Cms;
 
-use Eclipse\Cms\Filament\Resources\PageResource;
-use Eclipse\Cms\Filament\Resources\SectionResource;
-use Filament\Contracts\Plugin;
+use Eclipse\Cms\Admin\Filament\Resources\PageResource;
+use Eclipse\Cms\Admin\Filament\Resources\SectionResource;
+use Eclipse\Common\Foundation\Plugins\Plugin;
 use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
-use Filament\SpatieLaravelTranslatablePlugin;
 
-class CmsPlugin implements Plugin
+class CmsPlugin extends Plugin
 {
     public function getId(): string
     {
@@ -27,11 +26,7 @@ class CmsPlugin implements Plugin
                 NavigationGroup::make('CMS')
                     ->label('CMS')
                     ->collapsible(),
-            ])
-            ->plugin(
-                SpatieLaravelTranslatablePlugin::make()
-                    ->defaultLocales(['en'])
-            );
+            ]);
     }
 
     public function boot(Panel $panel): void

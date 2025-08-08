@@ -3,7 +3,6 @@
 namespace Eclipse\Cms\Factories;
 
 use Eclipse\Cms\Enums\PageStatus;
-use Eclipse\Cms\Enums\SectionType;
 use Eclipse\Cms\Models\Page;
 use Eclipse\Cms\Models\Section;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -45,11 +44,19 @@ class PageFactory extends Factory
             ],
             'code' => $this->faker->unique()->word(),
             'status' => $this->faker->randomElement([PageStatus::Draft, PageStatus::Published]),
-            'type' => SectionType::Pages,
+            'type' => 'page',
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
-            'section_id' => Section::factory(),
         ];
+    }
+
+    public function configure()
+    {
+        return $this->afterMaking(function (Page $page) {
+            if (! $page->section_id) {
+                $page->section_id = Section::factory()->create()->id;
+            }
+        });
     }
 
     public function forSection($section): static

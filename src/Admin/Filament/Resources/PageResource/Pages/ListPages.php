@@ -1,8 +1,8 @@
 <?php
 
-namespace Eclipse\Cms\Filament\Resources\PageResource\Pages;
+namespace Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages;
 
-use Eclipse\Cms\Filament\Resources\PageResource;
+use Eclipse\Cms\Admin\Filament\Resources\PageResource;
 use Eclipse\Common\Foundation\Pages\HasScoutSearch;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;

@@ -1,8 +1,8 @@
 <?php
 
-namespace Eclipse\Cms\Filament\Resources\PageResource\Pages;
+namespace Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages;
 
-use Eclipse\Cms\Filament\Resources\PageResource;
+use Eclipse\Cms\Admin\Filament\Resources\PageResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
