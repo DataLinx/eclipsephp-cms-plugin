@@ -2,13 +2,16 @@
 
 namespace Tests;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as BaseTestCase;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Workbench\App\Models\User;
 
 abstract class TestCase extends BaseTestCase
 {
-    use WithWorkbench;
+    use RefreshDatabase, WithWorkbench;
 
     protected ?User $superAdmin = null;
 
@@ -16,18 +19,19 @@ abstract class TestCase extends BaseTestCase
 
     protected function setUp(): void
     {
-        // Always show errors when testing
-        ini_set('display_errors', 1);
-        error_reporting(E_ALL);
-
         parent::setUp();
 
         $this->withoutVite();
+
+        config(['eclipse-cms.tenancy.enabled' => false]);
+        config(['eclipse-cms.tenancy.model' => 'Workbench\\App\\Models\\Site']);
+        config(['eclipse-cms.tenancy.foreign_key' => 'site_id']);
+        config(['app.key' => 'base64:'.base64_encode('12345678901234567890123456789012')]);
+
+        // Disable Scout during tests
+        config(['scout.driver' => null]);
     }
 
-    /**
-     * Run database migrations
-     */
     protected function migrate(): self
     {
         $this->artisan('migrate');
@@ -35,26 +39,58 @@ abstract class TestCase extends BaseTestCase
         return $this;
     }
 
-    /**
-     * Set up default "super admin" user
-     */
-    protected function setUpSuperAdmin(): self
+    protected function set_up_super_admin_and_tenant(): self
     {
-        $this->superAdmin = User::factory()->make();
-        $this->superAdmin->assignRole('super_admin')->save();
+        $this->migrate();
+        $this->superAdmin = User::factory()->create();
+        $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
 
+        $permissions = [
+            'view_any_page', 'view_page', 'create_page', 'update_page', 'delete_page', 'restore_page', 'force_delete_page',
+            'view_any_section', 'view_section', 'create_section', 'update_section', 'delete_section', 'restore_section', 'force_delete_section',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
+
+        $role->syncPermissions($permissions);
+        $this->superAdmin->assignRole($role);
         $this->actingAs($this->superAdmin);
 
         return $this;
     }
 
-    /**
-     * Set up a common user with no roles or permissions
-     */
-    protected function setUpCommonUser(): self
+    protected function set_up_common_user_and_tenant(): self
     {
+        $this->migrate();
         $this->user = User::factory()->create();
+        $this->actingAs($this->user);
 
+        return $this;
+    }
+
+    protected function set_up_user_without_permissions(): self
+    {
+        $this->migrate();
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user);
+
+        return $this;
+    }
+
+    protected function set_up_user_with_permissions(array $permissions): self
+    {
+        $this->migrate();
+        $this->user = User::factory()->create();
+        $role = Role::firstOrCreate(['name' => 'test_role', 'guard_name' => 'web']);
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
+
+        $role->syncPermissions($permissions);
+        $this->user->assignRole('test_role');
         $this->actingAs($this->user);
 
         return $this;

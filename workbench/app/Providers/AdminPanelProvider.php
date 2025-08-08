@@ -2,7 +2,6 @@
 
 namespace Workbench\App\Providers;
 
-use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Eclipse\Cms\CmsPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -10,6 +9,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\SpatieLaravelTranslatablePlugin;
 use Filament\Support\Facades\FilamentView;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -44,8 +44,9 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->plugins([
-                FilamentShieldPlugin::make(),
                 CmsPlugin::make(),
+                SpatieLaravelTranslatablePlugin::make()
+                    ->defaultLocales(['en']),
             ])
             ->pages([
                 Dashboard::class,
