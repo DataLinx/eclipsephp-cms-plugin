@@ -39,7 +39,7 @@ abstract class TestCase extends BaseTestCase
         return $this;
     }
 
-    protected function set_up_super_admin_and_tenant(): self
+    protected function setUpSuperAdmin(): self
     {
         $this->migrate();
         $this->superAdmin = User::factory()->create();
@@ -61,7 +61,7 @@ abstract class TestCase extends BaseTestCase
         return $this;
     }
 
-    protected function set_up_common_user_and_tenant(): self
+    protected function setUpCommonUserAndTenant(): self
     {
         $this->migrate();
         $this->user = User::factory()->create();
@@ -70,7 +70,7 @@ abstract class TestCase extends BaseTestCase
         return $this;
     }
 
-    protected function set_up_user_without_permissions(): self
+    protected function setUpUserWithoutPermissions(): self
     {
         $this->migrate();
         $this->user = User::factory()->create();
@@ -79,7 +79,7 @@ abstract class TestCase extends BaseTestCase
         return $this;
     }
 
-    protected function set_up_user_with_permissions(array $permissions): self
+    protected function setUpUserWithPermissions(array $permissions): self
     {
         $this->migrate();
         $this->user = User::factory()->create();

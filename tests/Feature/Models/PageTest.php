@@ -6,7 +6,7 @@ use Eclipse\Cms\Models\Section;
 use Illuminate\Validation\ValidationException;
 
 beforeEach(function () {
-    $this->set_up_super_admin_and_tenant();
+    $this->setUpSuperAdmin();
 });
 
 test('page can be created with valid data', function () {

@@ -1,154 +1,118 @@
 <?php
 
-namespace Tests\Feature\Filament\Resources;
-
 use Eclipse\Cms\Admin\Filament\Resources\SectionResource;
 use Eclipse\Cms\Models\Section;
 use Filament\Actions\DeleteAction;
 use Livewire\Livewire;
-use Tests\TestCase;
 
-class SectionResourceTest extends TestCase
-{
-    public function test_authorized_access_can_view_sections_list(): void
-    {
-        $this->migrate()
-            ->set_up_super_admin_and_tenant();
+beforeEach(function () {
+    $this->setUpSuperAdmin();
+});
 
-        $response = $this->get(SectionResource::getUrl('index'));
+test('authorized access can view sections list', function () {
+    $response = $this->get(SectionResource::getUrl('index'));
 
-        $response->assertSuccessful();
-    }
+    $response->assertSuccessful();
+});
 
-    public function test_create_section_screen_can_be_rendered(): void
-    {
-        $this->migrate()
-            ->set_up_super_admin_and_tenant();
+test('create section screen can be rendered', function () {
+    $response = $this->get(SectionResource::getUrl('create'));
 
-        $response = $this->get(SectionResource::getUrl('create'));
+    $response->assertSuccessful();
+});
 
-        $response->assertSuccessful();
-    }
-
-    public function test_section_form_validation_works(): void
-    {
-        $this->migrate()
-            ->set_up_super_admin_and_tenant();
-
-        Livewire::test(SectionResource\Pages\CreateSection::class)
-            ->fillForm([
-                'name' => '',
-                'type' => 'pages',
-            ])
-            ->call('create')
-            ->assertHasFormErrors(['name']);
-    }
-
-    public function test_section_can_be_created_through_form(): void
-    {
-        $this->migrate()
-            ->set_up_super_admin_and_tenant();
-
-        $newData = [
-            'name.en' => 'Test Section',
-            'name.sl' => 'Test Sekcija',
+test('section form validation works', function () {
+    Livewire::test(SectionResource\Pages\CreateSection::class)
+        ->fillForm([
+            'name' => '',
             'type' => 'pages',
-        ];
-
-        Livewire::test(SectionResource\Pages\CreateSection::class)
-            ->fillForm($newData)
-            ->call('create')
-            ->assertHasNoFormErrors();
-
-        $this->assertDatabaseHas('cms_sections', [
-            'type' => 'pages',
-        ]);
-    }
-
-    public function test_section_can_be_updated(): void
-    {
-        $this->migrate()
-            ->set_up_super_admin_and_tenant();
-
-        $section = Section::factory()->create();
-
-        $newData = [
-            'name.en' => 'Updated Section',
-            'name.sl' => 'Posodobljena Sekcija',
-            'type' => 'pages',
-        ];
-
-        Livewire::test(SectionResource\Pages\EditSection::class, [
-            'record' => $section->getRouteKey(),
         ])
-            ->fillForm($newData)
-            ->call('save')
-            ->assertHasNoFormErrors();
+        ->call('create')
+        ->assertHasFormErrors(['name']);
+});
 
-        $this->assertTrue(true);
-    }
+test('section can be created through form', function () {
+    $newData = [
+        'name.en' => 'Test Section',
+        'name.sl' => 'Test Sekcija',
+        'type' => 'pages',
+    ];
 
-    public function test_section_can_be_deleted(): void
-    {
-        $this->migrate()
-            ->set_up_super_admin_and_tenant();
+    Livewire::test(SectionResource\Pages\CreateSection::class)
+        ->fillForm($newData)
+        ->call('create')
+        ->assertHasNoFormErrors();
 
-        $section = Section::factory()->create();
+    expect(Section::where('type', 'pages')->exists())->toBeTrue();
+});
 
-        Livewire::test(SectionResource\Pages\EditSection::class, [
-            'record' => $section->getRouteKey(),
-        ])
-            ->callAction(DeleteAction::class);
+test('section can be updated', function () {
+    $section = Section::factory()->create();
 
-        $this->assertSoftDeleted($section);
-    }
+    $newData = [
+        'name.en' => 'Updated Section',
+        'name.sl' => 'Posodobljena Sekcija',
+        'type' => 'pages',
+    ];
 
-    public function test_unauthorized_access_can_be_prevented(): void
-    {
-        $this->migrate()
-            ->set_up_user_without_permissions();
+    Livewire::test(SectionResource\Pages\EditSection::class, [
+        'record' => $section->getRouteKey(),
+    ])
+        ->fillForm($newData)
+        ->call('save')
+        ->assertHasNoFormErrors();
 
-        $response = $this->get(SectionResource::getUrl('index'));
+    expect(true)->toBeTrue();
+});
 
-        $response->assertForbidden();
-    }
+test('section can be deleted', function () {
+    $section = Section::factory()->create();
 
-    public function test_user_with_create_permission_can_create_sections(): void
-    {
-        $this->migrate()
-            ->set_up_user_with_permissions(['view_any_section', 'create_section']);
+    Livewire::test(SectionResource\Pages\EditSection::class, [
+        'record' => $section->getRouteKey(),
+    ])
+        ->callAction(DeleteAction::class);
 
-        $response = $this->get(SectionResource::getUrl('create'));
+    expect($section->fresh()->trashed())->toBeTrue();
+});
 
-        $response->assertSuccessful();
-    }
+test('unauthorized access can be prevented', function () {
+    $this->setUpUserWithoutPermissions();
 
-    public function test_user_with_update_permission_can_edit_sections(): void
-    {
-        $this->migrate()
-            ->set_up_user_with_permissions(['view_any_section', 'view_section', 'update_section']);
+    $response = $this->get(SectionResource::getUrl('index'));
 
-        $section = Section::factory()->create();
+    $response->assertForbidden();
+});
 
-        $response = $this->get(SectionResource::getUrl('edit', [
-            'record' => $section,
-        ]));
+test('user with create permission can create sections', function () {
+    $this->setUpUserWithPermissions(['view_any_section', 'create_section']);
 
-        $response->assertSuccessful();
-    }
+    $response = $this->get(SectionResource::getUrl('create'));
 
-    public function test_user_with_delete_permission_can_delete_sections(): void
-    {
-        $this->migrate()
-            ->set_up_user_with_permissions(['view_any_section', 'view_section', 'update_section', 'delete_section']);
+    $response->assertSuccessful();
+});
 
-        $section = Section::factory()->create();
+test('user with update permission can edit sections', function () {
+    $this->setUpUserWithPermissions(['view_any_section', 'view_section', 'update_section']);
 
-        Livewire::test(SectionResource\Pages\EditSection::class, [
-            'record' => $section->getRouteKey(),
-        ])
-            ->callAction('delete');
+    $section = Section::factory()->create();
 
-        $this->assertSoftDeleted($section);
-    }
-}
+    $response = $this->get(SectionResource::getUrl('edit', [
+        'record' => $section,
+    ]));
+
+    $response->assertSuccessful();
+});
+
+test('user with delete permission can delete sections', function () {
+    $this->setUpUserWithPermissions(['view_any_section', 'view_section', 'update_section', 'delete_section']);
+
+    $section = Section::factory()->create();
+
+    Livewire::test(SectionResource\Pages\EditSection::class, [
+        'record' => $section->getRouteKey(),
+    ])
+        ->callAction('delete');
+
+    expect($section->fresh()->trashed())->toBeTrue();
+});

@@ -7,7 +7,7 @@ use Eclipse\Cms\Models\Section;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    $this->set_up_super_admin_and_tenant();
+    $this->setUpSuperAdmin();
 });
 
 test('authorized access can view pages list', function () {
@@ -118,21 +118,21 @@ test('page can be deleted', function () {
 });
 
 test('unauthorized access can be prevented', function () {
-    $this->set_up_user_without_permissions();
+    $this->setUpUserWithoutPermissions();
 
     Livewire::test(PageResource\Pages\ListPages::class)
         ->assertForbidden();
 });
 
 test('user with create permission can create pages', function () {
-    $this->set_up_user_with_permissions(['view_any_page', 'create_page']);
+    $this->setUpUserWithPermissions(['view_any_page', 'create_page']);
 
     Livewire::test(PageResource\Pages\CreatePage::class)
         ->assertSuccessful();
 });
 
 test('user with update permission can edit pages', function () {
-    $this->set_up_user_with_permissions(['view_any_page', 'view_page', 'update_page']);
+    $this->setUpUserWithPermissions(['view_any_page', 'view_page', 'update_page']);
     $page = Page::factory()->create();
 
     Livewire::test(PageResource\Pages\EditPage::class, [
@@ -142,7 +142,7 @@ test('user with update permission can edit pages', function () {
 });
 
 test('user with delete permission can delete pages', function () {
-    $this->set_up_user_with_permissions(['view_any_page', 'view_page', 'delete_page']);
+    $this->setUpUserWithPermissions(['view_any_page', 'view_page', 'delete_page']);
     $page = Page::factory()->create();
 
     $pageExists = Page::where('id', $page->id)->exists();
