@@ -104,13 +104,9 @@ it('getUrl returns linkable URL for linkable type', function () {
         'linkable_id' => $page->id,
     ]);
 
-    // Test that linkable relationship works correctly
     expect($item->linkable)->not->toBeNull()
         ->and($item->linkable)->toBeInstanceOf(Page::class)
         ->and($item->type)->toBe(MenuItemType::Linkable);
-
-    // The actual URL will be null until Page model has getUrl() method (in separate PR)
-    // For now, just verify the structure is correct
 });
 
 it('can check if item has children', function () {
@@ -131,16 +127,12 @@ it('has proper scopes', function () {
     $rootItem = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => -1]);
     $childItem = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $rootItem->id]);
 
-    // Test active scope: 3 items should be active (activeItem, rootItem, childItem)
     expect(Item::active()->count())->toBe(3);
 
-    // Test inactive items: 1 item should be inactive
     expect(Item::where('is_active', false)->count())->toBe(1);
 
-    // Test root items scope: 3 items with parent_id = -1 (activeItem, inactiveItem, rootItem)
     expect(Item::rootItems()->count())->toBe(3);
 
-    // Test child items: 1 item with parent_id != -1
     expect(Item::where('parent_id', '!=', -1)->count())->toBe(1);
 });
 

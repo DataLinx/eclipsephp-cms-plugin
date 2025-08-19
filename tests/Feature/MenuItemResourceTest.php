@@ -253,19 +253,15 @@ it('menu item getUrl method works correctly', function () {
     $customUrlItem = Item::factory()->customUrl('https://example.com')->create();
     $groupItem = Item::factory()->group()->create();
 
-    // Test custom URL - this is fully controlled by menu item
     expect($customUrlItem->getUrl())->toBe('https://example.com');
 
-    // Test group - should always return null
     expect($groupItem->getUrl())->toBeNull();
 
-    // Test linkable structure - verify relationships work
     expect($pageItem->linkable)->not->toBeNull()
         ->and($pageItem->linkable)->toBeInstanceOf(Page::class)
         ->and($sectionItem->linkable)->not->toBeNull()
         ->and($sectionItem->linkable)->toBeInstanceOf(Section::class);
 
-    // Test that linkable items attempt to get URL (even if null due to missing getUrl methods)
     expect($pageItem->type)->toBe(MenuItemType::Linkable)
         ->and($sectionItem->type)->toBe(MenuItemType::Linkable);
 });

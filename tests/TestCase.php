@@ -19,6 +19,10 @@ abstract class TestCase extends BaseTestCase
 
     protected function setUp(): void
     {
+        // Always show errors when testing
+        ini_set('display_errors', 1);
+        error_reporting(E_ALL);
+
         parent::setUp();
 
         $this->withoutVite();
@@ -31,6 +35,9 @@ abstract class TestCase extends BaseTestCase
         config(['scout.driver' => null]);
     }
 
+    /**
+     * Run database migrations
+     */
     protected function migrate(): self
     {
         $this->artisan('migrate');
@@ -38,6 +45,9 @@ abstract class TestCase extends BaseTestCase
         return $this;
     }
 
+    /**
+     * Set up default "super admin" user
+     */
     protected function setUpSuperAdmin(): self
     {
         $this->migrate();
@@ -48,7 +58,10 @@ abstract class TestCase extends BaseTestCase
         return $this;
     }
 
-    protected function setUpCommonUserAndTenant(): self
+    /**
+     * Set up a common user with no roles or permissions
+     */
+    protected function setUpCommonUser(): self
     {
         $this->migrate();
         $this->user = User::factory()->create();
@@ -59,7 +72,6 @@ abstract class TestCase extends BaseTestCase
 
     protected function setUpUserWithoutPermissions(): self
     {
-        $this->migrate();
         $this->user = User::factory()->create();
         $this->actingAs($this->user);
 
@@ -86,6 +98,7 @@ abstract class TestCase extends BaseTestCase
     public function ignorePackageDiscoveriesFrom()
     {
         return [
+            // A list of packages that should not be auto-discovered when running tests
             'laravel/telescope',
         ];
     }

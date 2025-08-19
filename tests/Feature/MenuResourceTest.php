@@ -46,7 +46,6 @@ it('can create menu', function () {
         'is_active' => $newData->is_active,
     ]);
 
-    // Check that a menu was created with the correct translatable title
     $menu = Menu::where('code', $newData->code)->first();
     expect($menu)->not->toBeNull()
         ->and($menu->title)->toBe($newData->title);
