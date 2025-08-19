@@ -2,23 +2,68 @@
 
 namespace Eclipse\Cms\Models;
 
+use Eclipse\Cms\Factories\MenuFactory;
+use Eclipse\Cms\Models\Menu\Item;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Translatable\HasTranslations;
 
 class Menu extends Model
 {
-    use SoftDeletes;
+    use HasFactory, HasTranslations, SoftDeletes;
 
-    protected $fillable = [
+    protected $table = 'cms_menus';
+
+    protected static function newFactory(): MenuFactory
+    {
+        return MenuFactory::new();
+    }
+
+    public function getFillable(): array
+    {
+        $attr = [
+            'title',
+            'is_active',
+            'code',
+        ];
+
+        if (config('eclipse-cms.tenancy.enabled')) {
+            $attr[] = config('eclipse-cms.tenancy.foreign_key');
+        }
+
+        return $attr;
+    }
+
+    public array $translatable = [
         'title',
-        'is_active',
-        'code',
     ];
 
     protected function casts(): array
     {
         return [
+            'title' => 'array',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(Item::class)->where('parent_id', -1)->orderBy('sort');
+    }
+
+    public function allItems(): HasMany
+    {
+        return $this->hasMany(Item::class)->orderBy('sort');
+    }
+
+    public function site(): BelongsTo
+    {
+        $tenantModel = config('eclipse-cms.tenancy.model');
+        $tenantFK = config('eclipse-cms.tenancy.foreign_key', 'site_id');
+
+        return $this->belongsTo($tenantModel, $tenantFK);
     }
 }
