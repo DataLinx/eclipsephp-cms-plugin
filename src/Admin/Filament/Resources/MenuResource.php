@@ -61,8 +61,8 @@ class MenuResource extends Resource
                     ->boolean()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('allItems_count')
-                    ->counts('allItems')
+                Tables\Columns\TextColumn::make('allItems.label')
+                    ->wrap()
                     ->label('Items')
                     ->sortable(),
 
@@ -112,21 +112,10 @@ class MenuResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
+        return parent::getEloquentQuery()
+            ->with(['allItems'])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
-
-        if (config('eclipse-cms.tenancy.enabled')) {
-            $tenantModel = config('eclipse-cms.tenancy.model');
-            if ($tenantModel && class_exists($tenantModel)) {
-                if ($currentSite = $tenantModel::getCurrent()) {
-                    $tenantFK = config('eclipse-cms.tenancy.foreign_key', 'site_id');
-                    $query->where($tenantFK, $currentSite->id);
-                }
-            }
-        }
-
-        return $query;
     }
 }

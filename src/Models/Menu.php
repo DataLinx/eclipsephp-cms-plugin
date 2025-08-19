@@ -4,6 +4,7 @@ namespace Eclipse\Cms\Models;
 
 use Eclipse\Cms\Factories\MenuFactory;
 use Eclipse\Cms\Models\Menu\Item;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +21,24 @@ class Menu extends Model
     protected static function newFactory(): MenuFactory
     {
         return MenuFactory::new();
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        if (config('eclipse-cms.tenancy.enabled')) {
+            static::addGlobalScope('tenant', function (Builder $builder) {
+                $tenantModel = config('eclipse-cms.tenancy.model');
+                if ($tenantModel && class_exists($tenantModel)) {
+                    $currentSite = $tenantModel::first();
+                    if ($currentSite) {
+                        $tenantFK = config('eclipse-cms.tenancy.foreign_key', 'site_id');
+                        $builder->where($tenantFK, $currentSite->id);
+                    }
+                }
+            });
+        }
     }
 
     public function getFillable(): array

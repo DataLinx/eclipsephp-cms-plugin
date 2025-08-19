@@ -17,7 +17,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
 class MenuItemResource extends Resource
@@ -103,14 +102,23 @@ class MenuItemResource extends Resource
         return $form->schema(static::getMenuItemFormSchema());
     }
 
-    public static function getMenuItemTableColumns(): array
+    public static function getMenuItemTableColumns(bool $withTreeFormatting = false): array
     {
+        $labelColumn = Tables\Columns\TextColumn::make('label')
+            ->searchable()
+            ->sortable(false);
+
+        if ($withTreeFormatting) {
+            $labelColumn
+                ->formatStateUsing(fn (Model $record): HtmlString => new HtmlString($record->getTreeFormattedName()))
+                ->tooltip(fn ($record) => $record->getFullPath());
+        }
+
         return [
-            Tables\Columns\TextColumn::make('label')
-                ->searchable()
-                ->sortable(false),
+            $labelColumn,
 
             Tables\Columns\TextColumn::make('type')
+                ->sortable(false)
                 ->badge()
                 ->formatStateUsing(fn ($state) => $state->getLabel()),
 
@@ -124,54 +132,19 @@ class MenuItemResource extends Resource
     {
         return $table
             ->modifyQueryUsing(function (Builder $query): Builder {
-                $selectArray = Item::selectArray();
-
-                unset($selectArray[Item::defaultParentKey()]);
-                $orderedIds = array_keys($selectArray);
-
-                if (! empty($orderedIds)) {
-                    // Use database-agnostic ordering for testing compatibility
-                    if (config('database.default') === 'sqlite' || app()->environment('testing')) {
-                        foreach (array_reverse($orderedIds) as $id) {
-                            $query->orderByDesc(DB::raw("id = {$id}"));
-                        }
-
-                        return $query->orderBy('sort');
-                    } else {
-                        $idsString = implode(',', $orderedIds);
-
-                        return $query->orderByRaw("FIELD(id, {$idsString})");
-                    }
-                }
-
-                return $query->orderBy('sort');
+                return $query->orderedForTree();
             })
             ->columns([
-                Tables\Columns\TextColumn::make('label')
-                    ->searchable()
-                    ->sortable(false)
-                    ->formatStateUsing(fn (Model $record): HtmlString => new HtmlString($record->getTreeFormattedName()))
-                    ->tooltip(fn ($record) => $record->getFullPath()),
+                ...static::getMenuItemTableColumns(true),
 
                 Tables\Columns\TextColumn::make('menu.title')
                     ->searchable()
-                    ->sortable()
+                    ->sortable(false)
                     ->toggleable(),
-
-                Tables\Columns\TextColumn::make('type')
-                    ->badge()
-                    ->formatStateUsing(fn ($state) => $state->getLabel()),
 
                 Tables\Columns\IconColumn::make('new_tab')
+                    ->sortable(false)
                     ->boolean()
-                    ->toggleable(),
-
-                Tables\Columns\IconColumn::make('is_active')
-                    ->boolean()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('sort')
-                    ->sortable()
                     ->toggleable(),
             ])
             ->filters([
@@ -226,6 +199,7 @@ class MenuItemResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->with(['children', 'parent', 'menu'])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

@@ -22,9 +22,8 @@ class ItemsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-
             ->recordTitleAttribute('label')
-            ->columns(MenuItemResource::getMenuItemTableColumns())
+            ->columns(MenuItemResource::getMenuItemTableColumns(true))
             ->filters([
                 //
             ])

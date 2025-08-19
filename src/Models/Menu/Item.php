@@ -8,7 +8,6 @@ use Eclipse\Cms\Models\Menu;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use SolutionForest\FilamentTree\Concern\ModelTree;
@@ -62,11 +61,6 @@ class Item extends Model
         return $this->belongsTo(Item::class, 'parent_id');
     }
 
-    public function children(): HasMany
-    {
-        return $this->hasMany(Item::class, 'parent_id')->orderBy('sort');
-    }
-
     public function linkable(): MorphTo
     {
         return $this->morphTo('linkable', 'linkable_class', 'linkable_id');
@@ -109,6 +103,25 @@ class Item extends Model
     public function scopeRootItems($query)
     {
         return $query->where('parent_id', -1);
+    }
+
+    public function scopeOrderedForTree($query)
+    {
+        $selectArray = static::selectArray();
+        unset($selectArray[static::defaultParentKey()]);
+        $orderedIds = array_keys($selectArray);
+
+        if (empty($orderedIds)) {
+            return $query->orderBy('sort');
+        }
+
+        return $query->orderByRaw(
+            'CASE '.
+            collect($orderedIds)->map(function ($id, $index) {
+                return "WHEN id = {$id} THEN {$index}";
+            })->implode(' ').
+            ' ELSE 999999 END'
+        );
     }
 
     protected static function formatTreeName(string $value): array
