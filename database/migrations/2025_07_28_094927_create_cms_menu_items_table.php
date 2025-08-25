@@ -15,9 +15,11 @@ return new class extends Migration
                 ->constrained('cms_menus', 'id')
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
+            $table->integer('parent_id')->default(-1);
             $table->string('type');
-            $table->string('linkable_class');
-            $table->string('linkable_id');
+            $table->string('linkable_class')->nullable();
+            $table->string('linkable_id')->nullable();
+            $table->text('custom_url')->nullable();
             $table->boolean('new_tab')->default(false);
             $table->boolean('is_active')->default(true);
             $table->integer('sort')->default(0);
