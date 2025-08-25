@@ -200,4 +200,30 @@ class Item extends Model
 
         return $options;
     }
+
+    public static function getParentOptions(?int $menuId = null, ?int $excludeId = null): array
+    {
+        $query = static::query();
+
+        if ($menuId) {
+            $query->where('menu_id', $menuId);
+        }
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $options = $query->pluck('label', 'id')->toArray();
+        $selectArray = static::selectArray();
+
+        $filteredOptions = [];
+        foreach ($options as $key => $value) {
+            if (isset($selectArray[$key])) {
+                $formatted = self::formatTreeName($selectArray[$key]);
+                $filteredOptions[$key] = self::getTreePrefix($formatted['level']).$formatted['name'];
+            }
+        }
+
+        return $filteredOptions;
+    }
 }

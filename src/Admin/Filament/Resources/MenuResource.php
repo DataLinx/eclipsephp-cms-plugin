@@ -7,6 +7,8 @@ use Eclipse\Cms\Admin\Filament\Resources\MenuResource\RelationManagers;
 use Eclipse\Cms\Models\Menu;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -30,17 +32,61 @@ class MenuResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('title')
-                    ->required()
-                    ->maxLength(255)
-                    ->columnSpanFull(),
+                Forms\Components\Section::make()
+                    ->compact()
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('title')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('code')
+                            ->maxLength(255)
+                            ->helperText('Unique identifier for this menu (optional)'),
+                        Forms\Components\Toggle::make('is_active')
+                            ->columnSpanFull()
+                            ->default(true),
+                    ]),
+            ]);
+    }
 
-                Forms\Components\TextInput::make('code')
-                    ->maxLength(255)
-                    ->helperText('Unique identifier for this menu (optional)'),
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make('Information')
+                    ->compact()
+                    ->schema([
+                        Infolists\Components\TextEntry::make('title')
+                            ->label('Title'),
+                        Infolists\Components\TextEntry::make('code')
+                            ->label('Code')
+                            ->placeholder('—'),
+                        Infolists\Components\IconEntry::make('is_active')
+                            ->label('Status')
+                            ->boolean()
+                            ->trueIcon('heroicon-o-check-circle')
+                            ->falseIcon('heroicon-o-x-circle')
+                            ->trueColor('success')
+                            ->falseColor('danger'),
+                    ])
+                    ->columns(3),
 
-                Forms\Components\Toggle::make('is_active')
-                    ->default(true),
+                Infolists\Components\Section::make('Timestamps')
+                    ->compact()
+                    ->schema([
+                        Infolists\Components\TextEntry::make('created_at')
+                            ->label('Created')
+                            ->dateTime(),
+                        Infolists\Components\TextEntry::make('updated_at')
+                            ->label('Last Updated')
+                            ->dateTime(),
+                        Infolists\Components\TextEntry::make('deleted_at')
+                            ->label('Deleted')
+                            ->dateTime()
+                            ->placeholder('—'),
+                    ])
+                    ->columns(3)
+                    ->collapsible(),
             ]);
     }
 
@@ -51,26 +97,17 @@ class MenuResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->searchable()
                     ->sortable(),
-
                 Tables\Columns\TextColumn::make('code')
                     ->searchable()
                     ->sortable()
                     ->placeholder('—'),
-
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('allItems.label')
-                    ->wrap()
-                    ->label('Items')
-                    ->sortable(),
-
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -96,7 +133,7 @@ class MenuResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\ItemsRelationManager::class,
+            RelationManagers\MenuItemsRelationManager::class,
         ];
     }
 
@@ -107,13 +144,13 @@ class MenuResource extends Resource
             'create' => Pages\CreateMenu::route('/create'),
             'view' => Pages\ViewMenu::route('/{record}'),
             'edit' => Pages\EditMenu::route('/{record}/edit'),
+            'sort-items' => Pages\SortMenuItems::route('/{record}/sort-items'),
         ];
     }
 
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['allItems'])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

@@ -75,7 +75,7 @@ class Menu extends Model
 
     public function allItems(): HasMany
     {
-        return $this->hasMany(Item::class)->orderBy('sort');
+        return $this->hasMany(Item::class)->orderedForTree();
     }
 
     public function site(): BelongsTo

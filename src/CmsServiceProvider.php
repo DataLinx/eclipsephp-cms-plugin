@@ -3,8 +3,6 @@
 namespace Eclipse\Cms;
 
 use Eclipse\Cms\Models\Menu;
-use Eclipse\Cms\Models\Menu\Item;
-use Eclipse\Cms\Policies\MenuItemPolicy;
 use Eclipse\Cms\Policies\MenuPolicy;
 use Eclipse\Common\Foundation\Providers\PackageServiceProvider;
 use Eclipse\Common\Package;
@@ -26,6 +24,5 @@ class CmsServiceProvider extends PackageServiceProvider
     public function bootingPackage(): void
     {
         Gate::policy(Menu::class, MenuPolicy::class);
-        Gate::policy(Item::class, MenuItemPolicy::class);
     }
 }

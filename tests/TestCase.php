@@ -27,7 +27,6 @@ abstract class TestCase extends BaseTestCase
 
         $this->withoutVite();
 
-        config(['app.key' => 'base64:'.base64_encode('32characterslongforencryptionkey')]);
         config(['eclipse-cms.tenancy.enabled' => false]);
         config(['eclipse-cms.tenancy.model' => 'Workbench\\App\\Models\\Site']);
         config(['eclipse-cms.tenancy.foreign_key' => 'site_id']);

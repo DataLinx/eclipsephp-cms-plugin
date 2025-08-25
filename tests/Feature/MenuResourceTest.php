@@ -199,3 +199,23 @@ test('user with delete permission can delete menus', function () {
 
     expect($menu->fresh()->trashed())->toBeTrue();
 });
+
+it('can render menu item sorting page', function () {
+    $menu = Menu::factory()->create();
+
+    $this->get(MenuResource::getUrl('sort-items', ['record' => $menu]))
+        ->assertSuccessful();
+});
+
+it('can access menu item sorting page from relation manager', function () {
+    $menu = Menu::factory()->create();
+
+    $response = $this->get(MenuResource::getUrl('view', ['record' => $menu]));
+    $response->assertSuccessful();
+
+    $response = $this->get(MenuResource::getUrl('sort-items', ['record' => $menu]));
+    $response->assertSuccessful();
+
+    expect($response->getContent())->toContain('Sort Menu Items');
+    expect($response->getContent())->toContain("Drag and drop to reorder menu items for: {$menu->title}");
+});
