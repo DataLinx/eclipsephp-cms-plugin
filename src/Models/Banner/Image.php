@@ -2,9 +2,12 @@
 
 namespace Eclipse\Cms\Models\Banner;
 
+use Eclipse\Cms\Factories\BannerImageFactory;
 use Eclipse\Cms\Models\Banner;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Translatable\HasTranslations;
 
 /**
  * @property int $id Image ID
@@ -17,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Image extends Model
 {
+    use HasFactory, HasTranslations;
+
     public $timestamps = false;
 
     protected $table = 'cms_banner_images';
@@ -28,6 +33,10 @@ class Image extends Model
         'is_hidpi',
         'image_width',
         'image_height',
+    ];
+
+    public array $translatable = [
+        'file',
     ];
 
     public function banner(): BelongsTo
@@ -45,5 +54,10 @@ class Image extends Model
         return [
             'is_hidpi' => 'boolean',
         ];
+    }
+
+    protected static function newFactory(): BannerImageFactory
+    {
+        return BannerImageFactory::new();
     }
 }
