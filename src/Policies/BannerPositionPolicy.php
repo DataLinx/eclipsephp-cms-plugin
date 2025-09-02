@@ -15,11 +15,6 @@ class BannerPositionPolicy
         return $user->can('view_any_banner::position');
     }
 
-    public function view(Authorizable $user, Position $position): bool
-    {
-        return $user->can('view_banner::position');
-    }
-
     public function create(Authorizable $user): bool
     {
         return $user->can('create_banner::position');

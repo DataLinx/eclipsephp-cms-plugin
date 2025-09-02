@@ -5,6 +5,7 @@ namespace Eclipse\Cms\Seeders;
 use Eclipse\Cms\Models\Banner;
 use Eclipse\Cms\Models\Banner\ImageType;
 use Eclipse\Cms\Models\Banner\Position;
+use Exception;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 
@@ -43,22 +44,6 @@ class BannerSeeder extends Seeder
     {
         $bannerName = is_array($banner->name) ? $banner->name['en'] : $banner->name;
 
-        $regularFilename = "banner-{$banner->id}-{$suffix}.png";
-        $this->createBannerImage(
-            $type->image_width,
-            $type->image_height,
-            strtoupper($suffix)." - {$bannerName}",
-            $regularFilename
-        );
-
-        $banner->images()->create([
-            'type_id' => $type->id,
-            'file' => $regularFilename,
-            'image_width' => $type->image_width,
-            'image_height' => $type->image_height,
-            'is_hidpi' => false,
-        ]);
-
         if ($type->is_hidpi) {
             $hidpiFilename = "banner-{$banner->id}-{$suffix}@2x.png";
             $hidpiWidth = $type->image_width * 2;
@@ -77,6 +62,22 @@ class BannerSeeder extends Seeder
                 'image_width' => $hidpiWidth,
                 'image_height' => $hidpiHeight,
                 'is_hidpi' => true,
+            ]);
+        } else {
+            $regularFilename = "banner-{$banner->id}-{$suffix}.png";
+            $this->createBannerImage(
+                $type->image_width,
+                $type->image_height,
+                strtoupper($suffix)." - {$bannerName}",
+                $regularFilename
+            );
+
+            $banner->images()->create([
+                'type_id' => $type->id,
+                'file' => $regularFilename,
+                'image_width' => $type->image_width,
+                'image_height' => $type->image_height,
+                'is_hidpi' => false,
             ]);
         }
     }
@@ -102,7 +103,7 @@ class BannerSeeder extends Seeder
 
     protected function createBannerImage(int $width, int $height, string $text, string $filePath): bool
     {
-        if (Storage::disk('public')->exists($filePath)) {
+        if (Storage::exists($filePath)) {
             return true;
         }
 
@@ -116,12 +117,12 @@ class BannerSeeder extends Seeder
             }
 
             $directory = dirname($filePath);
-            if (! Storage::disk('public')->exists($directory)) {
-                Storage::disk('public')->makeDirectory($directory);
+            if (! Storage::exists($directory)) {
+                Storage::makeDirectory($directory);
             }
 
-            return Storage::disk('public')->put($filePath, $imageData);
-        } catch (\Exception) {
+            return Storage::put($filePath, $imageData);
+        } catch (Exception) {
             return false;
         }
     }

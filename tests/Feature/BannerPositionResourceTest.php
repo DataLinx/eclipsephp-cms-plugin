@@ -4,7 +4,9 @@ use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource;
 use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages\CreateBannerPosition;
 use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages\EditBannerPosition;
 use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages\ListBannerPositions;
+use Eclipse\Cms\Models\Banner;
 use Eclipse\Cms\Models\Banner\Position;
+use Illuminate\Support\Facades\Storage;
 
 use function Pest\Livewire\livewire;
 
@@ -132,4 +134,53 @@ it('can filter positions', function () {
     livewire(ListBannerPositions::class)
         ->assertCanSeeTableRecords($positions)
         ->assertTableFilterExists('trashed');
+});
+
+it('deletes all related banners and image files when position is deleted', function () {
+    Storage::fake();
+
+    Storage::put('banners/banner1-desktop.png', 'fake-image-content');
+    Storage::put('banners/banner1-mobile@2x.png', 'fake-hidpi-content');
+    Storage::put('banners/banner1-mobile@2x_1x.png', 'fake-regular-content');
+
+    $position = Position::factory()->create();
+    $banner = Banner::factory()->create(['position_id' => $position->id]);
+
+    $banner->images()->createMany([
+        [
+            'type_id' => 1,
+            'file' => ['en' => 'banners/banner1-desktop.png'],
+            'is_hidpi' => false,
+            'image_width' => 1200,
+            'image_height' => 400,
+        ],
+        [
+            'type_id' => 2,
+            'file' => ['en' => 'banners/banner1-mobile@2x.png'],
+            'is_hidpi' => true,
+            'image_width' => 1600,
+            'image_height' => 800,
+        ],
+        [
+            'type_id' => 2,
+            'file' => ['en' => 'banners/banner1-mobile@2x_1x.png'],
+            'is_hidpi' => false,
+            'image_width' => 800,
+            'image_height' => 400,
+        ],
+    ]);
+
+    expect($banner->images()->get())->toHaveCount(3);
+    expect(Storage::exists('banners/banner1-desktop.png'))->toBeTrue();
+    expect(Storage::exists('banners/banner1-mobile@2x.png'))->toBeTrue();
+    expect(Storage::exists('banners/banner1-mobile@2x_1x.png'))->toBeTrue();
+
+    $position->delete();
+
+    $this->assertSoftDeleted($position);
+    $this->assertSoftDeleted($banner);
+    expect(Banner::withTrashed()->find($banner->id)->images()->get())->toHaveCount(0);
+    expect(Storage::exists('banners/banner1-desktop.png'))->toBeFalse();
+    expect(Storage::exists('banners/banner1-mobile@2x.png'))->toBeFalse();
+    expect(Storage::exists('banners/banner1-mobile@2x_1x.png'))->toBeFalse();
 });

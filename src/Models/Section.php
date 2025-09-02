@@ -3,7 +3,6 @@
 namespace Eclipse\Cms\Models;
 
 use Eclipse\Cms\Enums\SectionType;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Eclipse\Cms\Factories\SectionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -37,11 +36,4 @@ class Section extends Model
     {
         return SectionFactory::new();
     }
-
-    /** @return BelongsTo<\Eclipse\Core\Models\Site, self> */
-    public function site(): BelongsTo
-    {
-        return $this->belongsTo(\Eclipse\Core\Models\Site::class);
-    }
-
 }

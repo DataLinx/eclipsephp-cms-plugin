@@ -1,63 +1,82 @@
 <?php
 
-namespace Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\RelationManagers;
+namespace Eclipse\Cms\Admin\Filament\Resources;
 
 use Closure;
+use Eclipse\Cms\Admin\Filament\Resources\BannerResource\Pages;
 use Eclipse\Cms\Models\Banner;
+use Eclipse\Cms\Models\Banner\Position;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
-use Filament\Resources\RelationManagers\Concerns\Translatable;
-use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Resources\Concerns\Translatable;
+use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\LocaleSwitcher;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class BannersRelationManager extends RelationManager
+class BannerResource extends Resource
 {
     use Translatable;
 
-    protected static string $relationship = 'banners';
+    protected static ?string $model = Banner::class;
 
-    public function form(Form $form): Form
+    protected static ?string $navigationIcon = 'heroicon-o-photo';
+
+    protected static ?string $navigationGroup = 'CMS';
+
+    protected static ?string $modelLabel = 'Banner';
+
+    protected static ?string $pluralModelLabel = 'Banners';
+
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Section::make()
+                    ->compact()
+                    ->schema([
+                        Forms\Components\Select::make('position_id')
+                            ->label('Position')
+                            ->relationship('position', 'name')
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn ($state, Set $set) => $set('images', [])),
 
-                Forms\Components\TextInput::make('link')
-                    ->url()
-                    ->maxLength(255),
+                        Forms\Components\TextInput::make('name')
+                            ->required()
+                            ->maxLength(255),
 
-                Forms\Components\Toggle::make('is_active')
-                    ->default(true),
+                        Forms\Components\TextInput::make('link')
+                            ->url()
+                            ->maxLength(255),
 
-                Forms\Components\Toggle::make('new_tab')
-                    ->default(false)
-                    ->label('Open in new tab'),
+                        Forms\Components\Toggle::make('is_active')
+                            ->default(true),
+
+                        Forms\Components\Toggle::make('new_tab')
+                            ->default(false)
+                            ->label('Open in new tab'),
+                    ]),
 
                 Forms\Components\Repeater::make('images')
                     ->relationship()
                     ->columnSpanFull()
+                    ->hiddenLabel()
                     ->schema([
                         Forms\Components\Hidden::make('type_id'),
                         Forms\Components\Hidden::make('is_hidpi'),
+                        Forms\Components\Hidden::make('position_id'),
                         FileUpload::make('file')
                             ->hiddenLabel()
                             ->image()
                             ->directory('banners')
-                            ->required()
                             ->rules([
                                 function (Get $get) {
                                     return function (string $attribute, $value, Closure $fail) use ($get): void {
@@ -69,7 +88,7 @@ class BannersRelationManager extends RelationManager
                                         $isHidpi = $get('is_hidpi');
 
                                         if ($typeId) {
-                                            $imageType = $this->getOwnerRecord()->imageTypes()->find($typeId);
+                                            $imageType = Position::find($get('position_id'))?->imageTypes()->find($typeId);
                                             if ($imageType && $imageType->image_width && $imageType->image_height) {
                                                 $expectedWidth = $isHidpi ? $imageType->image_width * 2 : $imageType->image_width;
                                                 $expectedHeight = $isHidpi ? $imageType->image_height * 2 : $imageType->image_height;
@@ -89,19 +108,18 @@ class BannersRelationManager extends RelationManager
                             ->helperText(function (Get $get): string {
                                 $typeId = $get('type_id');
                                 $isHidpi = $get('is_hidpi');
+                                $positionId = $get('position_id');
 
-                                if ($typeId) {
-                                    $imageType = $this->getOwnerRecord()->imageTypes()->find($typeId);
+                                if ($typeId && $positionId) {
+                                    $imageType = Position::find($positionId)?->imageTypes()->find($typeId);
                                     if ($imageType && $imageType->image_width && $imageType->image_height) {
                                         if ($isHidpi) {
-                                            $regularWidth = $imageType->image_width;
-                                            $regularHeight = $imageType->image_height;
-                                            $hidpiWidth = $regularWidth * 2;
-                                            $hidpiHeight = $regularHeight * 2;
+                                            $hidpiWidth = $imageType->image_width * 2;
+                                            $hidpiHeight = $imageType->image_height * 2;
 
-                                            return "Expected HiDPI size: {$hidpiWidth}px × {$hidpiHeight}px (2x of {$regularWidth}×{$regularHeight})";
+                                            return "{$imageType->name} @2x ({$hidpiWidth}×{$hidpiHeight}, displayed as {$imageType->image_width}×{$imageType->image_height})";
                                         } else {
-                                            return "Expected size: {$imageType->image_width}px × {$imageType->image_height}px";
+                                            return "{$imageType->name} ({$imageType->image_width}×{$imageType->image_height})";
                                         }
                                     }
                                 }
@@ -109,60 +127,55 @@ class BannersRelationManager extends RelationManager
                                 return 'Upload banner image';
                             }),
                     ])
-                    ->default(function () {
+                    ->default(function (Get $get) {
+                        $positionId = $get('position_id');
+                        if (! $positionId) {
+                            return [];
+                        }
+
                         $items = [];
-                        $this->getOwnerRecord()->imageTypes()->get()->each(function ($imageType) use (&$items) {
-                            $items[] = ['type_id' => $imageType->id, 'is_hidpi' => false];
+                        Position::find($positionId)?->imageTypes()->get()->each(function ($imageType) use (&$items, $positionId) {
                             if ($imageType->is_hidpi) {
-                                $items[] = ['type_id' => $imageType->id, 'is_hidpi' => true];
+                                $items[] = ['type_id' => $imageType->id, 'is_hidpi' => true, 'position_id' => $positionId];
+                            } else {
+                                $items[] = ['type_id' => $imageType->id, 'is_hidpi' => false, 'position_id' => $positionId];
                             }
                         });
 
                         return $items;
                     })
-                    ->minItems(function (): int {
-                        $count = 0;
-                        $this->getOwnerRecord()->imageTypes()->get()->each(function ($imageType) use (&$count) {
-                            $count++;
-                            if ($imageType->is_hidpi) {
-                                $count++;
-                            }
-                        });
+                    ->minItems(0)
+                    ->maxItems(function (Get $get): int {
+                        $positionId = $get('position_id');
+                        if (! $positionId) {
+                            return 0;
+                        }
 
-                        return $count;
-                    })
-                    ->maxItems(function (): int {
-                        $count = 0;
-                        $this->getOwnerRecord()->imageTypes()->get()->each(function ($imageType) use (&$count) {
-                            $count++;
-                            if ($imageType->is_hidpi) {
-                                $count++;
-                            }
-                        });
-
-                        return $count;
+                        return Position::find($positionId)?->imageTypes()->count() ?? 0;
                     })
                     ->addable(false)
                     ->deletable(false)
                     ->reorderable(false)
-                    ->itemLabel(function (array $state): string {
+                    ->itemLabel(function (array $state, Get $get): string {
                         $typeId = $state['type_id'] ?? null;
                         $isHidpi = $state['is_hidpi'] ?? false;
+                        $positionId = $get('position_id');
 
-                        if ($typeId) {
-                            $imageType = $this->getOwnerRecord()->imageTypes()->find($typeId);
+                        if ($typeId && $positionId) {
+                            $imageType = Position::find($positionId)?->imageTypes()->find($typeId);
                             if ($imageType) {
-                                $dimensions = '';
                                 if ($imageType->image_width && $imageType->image_height) {
                                     if ($isHidpi) {
-                                        $dimensions = " (@2x: {$imageType->image_width}×{$imageType->image_height} → ".
-                                                     ($imageType->image_width * 2).'×'.($imageType->image_height * 2).')';
+                                        $hidpiWidth = $imageType->image_width * 2;
+                                        $hidpiHeight = $imageType->image_height * 2;
+
+                                        return "{$imageType->name} @2x ({$hidpiWidth}×{$hidpiHeight}, displayed as {$imageType->image_width}×{$imageType->image_height})";
                                     } else {
-                                        $dimensions = " ({$imageType->image_width}×{$imageType->image_height})";
+                                        return "{$imageType->name} ({$imageType->image_width}×{$imageType->image_height})";
                                     }
                                 }
 
-                                return $imageType->name.($isHidpi ? ' @2x' : '').$dimensions;
+                                return $imageType->name;
                             }
                         }
 
@@ -171,10 +184,13 @@ class BannersRelationManager extends RelationManager
             ]);
     }
 
-    public function infolist(Infolist $infolist): Infolist
+    public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
+                Infolists\Components\TextEntry::make('position.name')
+                    ->label('Position'),
+
                 Infolists\Components\TextEntry::make('name'),
 
                 Infolists\Components\TextEntry::make('link')
@@ -197,16 +213,15 @@ class BannersRelationManager extends RelationManager
                                 ->label($image->type->name ?? 'Image')
                                 ->width('100%')
                                 ->height('auto')
-                                ->getStateUsing(fn () => $image->getTranslation('file', $this->activeLocale ?? app()->getLocale()))
+                                ->getStateUsing(fn () => $image->getTranslation('file', app()->getLocale()))
                         )->toArray()
                     ),
             ]);
     }
 
-    public function table(Table $table): Table
+    public static function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('sort')
                     ->label('#')
@@ -216,13 +231,18 @@ class BannersRelationManager extends RelationManager
                     ->circular()
                     ->stacked()
                     ->getStateUsing(function (Banner $record) {
-                        $locale = $this->activeLocale ?? app()->getLocale();
+                        $locale = app()->getLocale();
 
                         return $record->images->map(function ($image) use ($locale) {
                             return $image->getTranslation('file', $locale);
                         })->filter()->values()->toArray();
                     })
                     ->preview(true),
+
+                Tables\Columns\TextColumn::make('position.name')
+                    ->label('Position')
+                    ->sortable()
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
@@ -246,8 +266,11 @@ class BannersRelationManager extends RelationManager
                     ->label('New Tab'),
             ])
             ->defaultSort('sort')
-            ->reorderable('sort')
             ->filters([
+                Tables\Filters\SelectFilter::make('position_id')
+                    ->relationship('position', 'name')
+                    ->label('Position'),
+
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Active Status')
                     ->boolean()
@@ -264,25 +287,42 @@ class BannersRelationManager extends RelationManager
 
                 Tables\Filters\TrashedFilter::make(),
             ])
-            ->headerActions([
-                CreateAction::make()
-                    ->mutateFormDataUsing(function (array $data): array {
-                        $maxSort = $this->getOwnerRecord()->banners()->max('sort') ?? 0;
-                        $data['sort'] = $maxSort + 1;
-
-                        return $data;
-                    }),
-                LocaleSwitcher::make(),
-            ])
+            ->groups(['position.name'])
+            ->reorderable('sort')
             ->actions([
-                ViewAction::make(),
-                EditAction::make(),
-                DeleteAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('editPosition')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->label('Position')
+                    ->url(fn (Model $record): string => BannerPositionResource::getUrl('edit', [
+                        'record' => $record->position,
+                    ])),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListBanners::route('/'),
+            'create' => Pages\CreateBanner::route('/create'),
+            'view' => Pages\ViewBanner::route('/{record}'),
+            'edit' => Pages\EditBanner::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
             ]);
     }
 }
