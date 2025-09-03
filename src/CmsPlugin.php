@@ -28,7 +28,7 @@ class CmsPlugin extends Plugin
                 ->map(fn (Section $section): NavigationItem => NavigationItem::make($section->getTranslation('name', app()->getLocale()))
                     ->url(
                         fn (): string => PageResource::getUrl('index', [
-                            'section' => $section->id,
+                            'sId' => $section->id,
                         ])
                     )
                     ->icon('heroicon-o-arrow-turn-down-right')

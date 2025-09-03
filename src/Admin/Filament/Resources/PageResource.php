@@ -30,7 +30,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
-use Livewire\Attributes\Url;
 
 class PageResource extends Resource
 {
@@ -47,12 +46,6 @@ class PageResource extends Resource
     protected static bool $shouldRegisterNavigation = true;
 
     protected static ?string $navigationLabel = 'Pages';
-
-    // /**
-    //  * @var array<string, mixed> | null
-    //  */
-    // #[Url()]
-    // public ?array $tableFilters = null;
 
     public static function form(Form $form): Form
     {
@@ -82,7 +75,8 @@ class PageResource extends Resource
                             ->searchable()
                             ->preload()
                             ->native(false)
-                            ->columnSpan(1),
+                            ->columnSpan(1)
+                            ->default(request()->get('sId')),
 
                         TextInput::make('sef_key')
                             ->label('URL Slug')
@@ -171,8 +165,8 @@ class PageResource extends Resource
     {
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->when(
-                request()->get('section'),
-                fn (Builder $q, $sectionId) => $q->where('section_id', $sectionId)
+                request()->get('sId'),
+                fn (Builder $q, $sId) => $q->where('section_id', $sId)
             ))
             ->columns([
                 TextColumn::make('title')

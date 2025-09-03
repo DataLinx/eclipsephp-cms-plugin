@@ -15,8 +15,17 @@ class ListPages extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        $createAction = CreateAction::make();
+
+        if (request()->get('sId')) {
+            $createAction
+                ->url(fn () => PageResource::getUrl('create', [
+                    'sId' => request()->get('sId'),
+                ]));
+        }
+
         return [
-            CreateAction::make(),
+            $createAction,
         ];
     }
 }

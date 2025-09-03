@@ -161,7 +161,7 @@ test('pages can be filtered by section via URL parameter', function () {
     $page1 = Page::factory()->forSection($section1)->create();
     $page2 = Page::factory()->forSection($section2)->create();
 
-    $response = $this->get(PageResource::getUrl('index').'?section='.$section1->id);
+    $response = $this->get(PageResource::getUrl('index').'?sId='.$section1->id);
 
     $response->assertSuccessful();
     $response->assertSee($page1->title);
@@ -178,6 +178,6 @@ test('section navigation items generate correct URLs', function () {
 
     $item = $navigationItems[0];
     expect($item->getLabel())->toBe('Test Section');
-    expect($item->getUrl())->toContain('section='.$section->id);
+    expect($item->getUrl())->toContain('sId='.$section->id);
     expect($item->getGroup())->toBe('CMS');
 });
