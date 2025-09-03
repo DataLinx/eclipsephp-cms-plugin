@@ -157,7 +157,8 @@ class PageResource extends Resource
                     ->compact()
                     ->hiddenOn('create'),
 
-                Hidden::make('type'),
+                Hidden::make('type')
+                    ->default('page'),
             ]);
     }
 
