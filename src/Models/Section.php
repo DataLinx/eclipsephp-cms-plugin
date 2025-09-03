@@ -4,6 +4,7 @@ namespace Eclipse\Cms\Models;
 
 use Eclipse\Cms\Enums\SectionType;
 use Eclipse\Cms\Factories\SectionFactory;
+use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -48,9 +49,25 @@ class Section extends Model
         return SectionFactory::new();
     }
 
-    /** @return BelongsTo<\Eclipse\Core\Models\Site, self> */
     public function site(): BelongsTo
     {
-        return $this->belongsTo(\Eclipse\Core\Models\Site::class);
+        return $this->belongsTo(config('eclipse-cms.tenancy.model'));
+    }
+
+    protected static function booted(): void
+    {
+        if (config('eclipse-cms.tenancy.enabled')) {
+            static::addGlobalScope('tenant', function ($query): void {
+                if ($tenant = Filament::getTenant()) {
+                    $query->where(config('eclipse-cms.tenancy.foreign_key'), $tenant->id);
+                }
+            });
+
+            static::creating(function ($model): void {
+                if ($tenant = Filament::getTenant()) {
+                    $model->{config('eclipse-cms.tenancy.foreign_key')} = $tenant->id;
+                }
+            });
+        }
     }
 }
