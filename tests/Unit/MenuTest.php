@@ -107,3 +107,22 @@ it('has translatable fields', function () {
 
     expect($menu->translatable)->toContain('title');
 });
+
+it('deleting menu cascades to delete all menu items', function () {
+    $menu = Menu::factory()->create();
+    $item1 = Item::factory()->create(['menu_id' => $menu->id]);
+    $item2 = Item::factory()->create(['menu_id' => $menu->id]);
+    $childItem = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $item1->id]);
+
+    expect($menu->allItems)->toHaveCount(3);
+    expect($item1->trashed())->toBeFalse();
+    expect($item2->trashed())->toBeFalse();
+    expect($childItem->trashed())->toBeFalse();
+
+    $menu->delete();
+
+    expect($menu->trashed())->toBeTrue();
+    expect($item1->fresh()->trashed())->toBeTrue();
+    expect($item2->fresh()->trashed())->toBeTrue();
+    expect($childItem->fresh()->trashed())->toBeTrue();
+});

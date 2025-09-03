@@ -228,3 +228,51 @@ it('can get hierarchical options', function () {
     expect($options)->toBeArray()
         ->and(count($options))->toBeGreaterThanOrEqual(3);
 });
+
+it('deleting parent item cascades to delete children', function () {
+    $menu = Menu::factory()->create();
+    $parent = Item::factory()->create(['menu_id' => $menu->id]);
+    $child1 = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
+    $child2 = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
+
+    expect($parent->children)->toHaveCount(2);
+    expect($child1->trashed())->toBeFalse();
+    expect($child2->trashed())->toBeFalse();
+
+    $parent->delete();
+
+    expect($parent->trashed())->toBeTrue();
+    expect($child1->fresh()->trashed())->toBeTrue();
+    expect($child2->fresh()->trashed())->toBeTrue();
+});
+
+it('deleting parent item cascades to nested children recursively', function () {
+    $menu = Menu::factory()->create();
+    $grandparent = Item::factory()->create(['menu_id' => $menu->id]);
+    $parent = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $grandparent->id]);
+    $child = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
+
+    expect($grandparent->children)->toHaveCount(1);
+    expect($parent->children)->toHaveCount(1);
+
+    $grandparent->delete();
+
+    expect($grandparent->fresh()->trashed())->toBeTrue();
+    expect($parent->fresh()->trashed())->toBeTrue();
+    expect($child->fresh()->trashed())->toBeTrue();
+});
+
+it('cascading delete only affects children, not siblings', function () {
+    $menu = Menu::factory()->create();
+    $parent1 = Item::factory()->create(['menu_id' => $menu->id]);
+    $parent2 = Item::factory()->create(['menu_id' => $menu->id]);
+    $child1 = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent1->id]);
+    $child2 = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent2->id]);
+
+    $parent1->delete();
+
+    expect($parent1->fresh()->trashed())->toBeTrue();
+    expect($child1->fresh()->trashed())->toBeTrue();
+    expect($parent2->fresh()->trashed())->toBeFalse();
+    expect($child2->fresh()->trashed())->toBeFalse();
+});

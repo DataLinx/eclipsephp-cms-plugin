@@ -32,16 +32,17 @@ class MenuItemsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'label';
 
-    public function form(Form $form): Form
+    protected function getMenuItemFormSchema(?int $excludeId = null): array
     {
-        return $form->schema([
+        return [
             Forms\Components\Select::make('parent_id')
                 ->columnSpanFull()
                 ->label('Parent Item')
-                ->options(fn (?Model $record = null) => Item::getParentOptions(
-                    $this->getOwnerRecord()->id,
-                    $record?->id
-                ))
+                ->options(
+                    fn (?Model $record = null): array => Item::getHierarchicalOptions(
+                        $this->getOwnerRecord()->id
+                    )
+                )
                 ->searchable()
                 ->placeholder('Select parent item (leave empty for root level)')
                 ->nullable()
@@ -86,7 +87,12 @@ class MenuItemsRelationManager extends RelationManager
             Forms\Components\Toggle::make('is_active')
                 ->columnSpanFull()
                 ->default(true),
-        ]);
+        ];
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form->schema($this->getMenuItemFormSchema());
     }
 
     public function table(Table $table): Table
@@ -97,7 +103,11 @@ class MenuItemsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('label')
                     ->searchable()
                     ->sortable(false)
-                    ->formatStateUsing(fn (Model $record): HtmlString => new HtmlString($record->getTreeFormattedName()))
+                    ->formatStateUsing(
+                        fn (Model $record): HtmlString => new HtmlString(
+                            $record->getTreeFormattedName()
+                        )
+                    )
                     ->tooltip(fn ($record) => $record->getFullPath()),
                 Tables\Columns\TextColumn::make('type')
                     ->sortable(false)
@@ -139,6 +149,20 @@ class MenuItemsRelationManager extends RelationManager
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                Tables\Actions\Action::make('addSublink')
+                    ->icon('heroicon-o-plus-circle')
+                    ->color('warning')
+                    ->label('Add Sublink')
+                    ->form(fn () => $this->getMenuItemFormSchema(excludeId: null))
+                    ->fillForm(fn (Model $record): array => [
+                        'parent_id' => $record->id,
+                    ])
+                    ->action(function (array $data, Model $record): void {
+                        $data['menu_id'] = $this->getOwnerRecord()->id;
+                        $data['parent_id'] = $record->id;
+
+                        Item::create($data);
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

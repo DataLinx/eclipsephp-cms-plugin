@@ -5,6 +5,7 @@ namespace Eclipse\Cms\Admin\Filament\Resources\MenuResource\Pages;
 use Eclipse\Cms\Admin\Filament\Resources\MenuResource;
 use Eclipse\Cms\Enums\MenuItemType;
 use Eclipse\Cms\Models\Menu\Item;
+use Filament\Actions;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
@@ -13,11 +14,10 @@ use Illuminate\Database\Eloquent\Model;
 use SolutionForest\FilamentTree\Components\Tree;
 use SolutionForest\FilamentTree\Concern\InteractWithTree;
 use SolutionForest\FilamentTree\Contract\HasTree;
-use Filament\Actions;
 
 class SortMenuItems extends Page implements HasTree
 {
-    use Translatable, InteractsWithRecord, InteractWithTree;
+    use InteractsWithRecord, InteractWithTree, Translatable;
 
     protected static string $resource = MenuResource::class;
 
@@ -50,7 +50,7 @@ class SortMenuItems extends Page implements HasTree
         $breadcrumbs = [
             $resource::getUrl() => $resource::getBreadcrumb(),
             $resource::getUrl('view', [
-                'record' => $this->record->id
+                'record' => $this->record->id,
             ]) => "View {$this->record->title}",
             ...(filled($breadcrumb = $this->getBreadcrumb()) ? [$breadcrumb] : []),
         ];
@@ -79,7 +79,7 @@ class SortMenuItems extends Page implements HasTree
 
     protected function getTreeRecordIcon(?Model $record = null): ?string
     {
-        if (!$record) {
+        if (! $record) {
             return 'heroicon-o-bars-3';
         }
 

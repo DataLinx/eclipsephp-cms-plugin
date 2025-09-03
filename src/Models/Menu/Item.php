@@ -19,6 +19,17 @@ class Item extends Model
 
     protected $table = 'cms_menu_items';
 
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::deleting(function ($menuItem) {
+            $menuItem->children()->get()->each(function ($child) {
+                $child->delete();
+            });
+        });
+    }
+
     protected static function newFactory(): MenuItemFactory
     {
         return MenuItemFactory::new();
@@ -213,17 +224,13 @@ class Item extends Model
             $query->where('id', '!=', $excludeId);
         }
 
-        $options = $query->pluck('label', 'id')->toArray();
-        $selectArray = static::selectArray();
+        $items = $query->get();
+        $options = [];
 
-        $filteredOptions = [];
-        foreach ($options as $key => $value) {
-            if (isset($selectArray[$key])) {
-                $formatted = self::formatTreeName($selectArray[$key]);
-                $filteredOptions[$key] = self::getTreePrefix($formatted['level']).$formatted['name'];
-            }
+        foreach ($items as $item) {
+            $options[$item->id] = $item->getTreeFormattedName();
         }
 
-        return $filteredOptions;
+        return $options;
     }
 }

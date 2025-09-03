@@ -4,6 +4,7 @@ namespace Eclipse\Cms\Models;
 
 use Eclipse\Cms\Factories\MenuFactory;
 use Eclipse\Cms\Models\Menu\Item;
+use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,15 +28,18 @@ class Menu extends Model
     {
         parent::boot();
 
+        static::deleting(function ($menu) {
+            $menu->allItems()->get()->each(function ($item) {
+                $item->delete();
+            });
+        });
+
         if (config('eclipse-cms.tenancy.enabled')) {
             static::addGlobalScope('tenant', function (Builder $builder) {
-                $tenantModel = config('eclipse-cms.tenancy.model');
-                if ($tenantModel && class_exists($tenantModel)) {
-                    $currentSite = $tenantModel::first();
-                    if ($currentSite) {
-                        $tenantFK = config('eclipse-cms.tenancy.foreign_key', 'site_id');
-                        $builder->where($tenantFK, $currentSite->id);
-                    }
+                $currentTenant = Filament::getTenant();
+                if ($currentTenant) {
+                    $tenantFK = config('eclipse-cms.tenancy.foreign_key', 'site_id');
+                    $builder->where($tenantFK, $currentTenant->getKey());
                 }
             });
         }
