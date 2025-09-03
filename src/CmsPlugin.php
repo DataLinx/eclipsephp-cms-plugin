@@ -2,7 +2,7 @@
 
 namespace Eclipse\Cms;
 
-use Eclipse\Cms\Admin\Filament\Resources\SectionResource;
+use Eclipse\Cms\Admin\Filament\Resources\PageResource;
 use Eclipse\Cms\Models\Section;
 use Eclipse\Common\Foundation\Plugins\Plugin;
 use Exception;
@@ -27,8 +27,8 @@ class CmsPlugin extends Plugin
                 ->get()
                 ->map(fn (Section $section): NavigationItem => NavigationItem::make($section->getTranslation('name', app()->getLocale()))
                     ->url(
-                        fn (): string => SectionResource::getUrl('edit', [
-                            'record' => $section->id,
+                        fn (): string => PageResource::getUrl('index', [
+                            'section' => $section->id,
                         ])
                     )
                     ->icon('heroicon-o-arrow-turn-down-right')

@@ -30,6 +30,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Url;
 
 class PageResource extends Resource
 {
@@ -46,6 +47,12 @@ class PageResource extends Resource
     protected static bool $shouldRegisterNavigation = true;
 
     protected static ?string $navigationLabel = 'Pages';
+
+    // /**
+    //  * @var array<string, mixed> | null
+    //  */
+    // #[Url()]
+    // public ?array $tableFilters = null;
 
     public static function form(Form $form): Form
     {
@@ -163,6 +170,10 @@ class PageResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->when(
+                request()->get('section'),
+                fn (Builder $q, $sectionId) => $q->where('section_id', $sectionId)
+            ))
             ->columns([
                 TextColumn::make('title')
                     ->label('Page Title')
@@ -216,11 +227,6 @@ class PageResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
-                SelectFilter::make('section')
-                    ->relationship('section', 'name')
-                    ->searchable()
-                    ->preload(),
-
                 SelectFilter::make('status')
                     ->options(PageStatus::class),
 

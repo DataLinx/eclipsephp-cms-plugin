@@ -1,6 +1,7 @@
 <?php
 
 use Eclipse\Cms\Admin\Filament\Resources\PageResource;
+use Eclipse\Cms\CmsPlugin;
 use Eclipse\Cms\Enums\PageStatus;
 use Eclipse\Cms\Models\Page;
 use Eclipse\Cms\Models\Section;
@@ -151,4 +152,32 @@ test('user with delete permission can delete pages', function () {
     $page->delete();
 
     expect($page->fresh()->trashed())->toBeTrue();
+});
+
+test('pages can be filtered by section via URL parameter', function () {
+    $section1 = Section::factory()->create(['name' => ['en' => 'Section 1']]);
+    $section2 = Section::factory()->create(['name' => ['en' => 'Section 2']]);
+
+    $page1 = Page::factory()->forSection($section1)->create();
+    $page2 = Page::factory()->forSection($section2)->create();
+
+    $response = $this->get(PageResource::getUrl('index').'?section='.$section1->id);
+
+    $response->assertSuccessful();
+    $response->assertSee($page1->title);
+    $response->assertDontSee($page2->title);
+});
+
+test('section navigation items generate correct URLs', function () {
+    $section = Section::factory()->create(['name' => ['en' => 'Test Section']]);
+
+    $plugin = new CmsPlugin;
+    $navigationItems = $plugin->getSectionNavigationItems();
+
+    expect($navigationItems)->toHaveCount(1);
+
+    $item = $navigationItems[0];
+    expect($item->getLabel())->toBe('Test Section');
+    expect($item->getUrl())->toContain('section='.$section->id);
+    expect($item->getGroup())->toBe('CMS');
 });
