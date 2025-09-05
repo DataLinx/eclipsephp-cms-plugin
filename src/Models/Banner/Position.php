@@ -34,6 +34,14 @@ class Position extends Model
                     $builder->where($tenantFK, $tenant->id);
                 }
             });
+
+            static::creating(function (Position $model) {
+                $tenant = Filament::getTenant();
+                if ($tenant) {
+                    $tenantFK = config('eclipse-cms.tenancy.foreign_key', 'site_id');
+                    $model->setAttribute($tenantFK, $tenant->id);
+                }
+            });
         }
     }
 

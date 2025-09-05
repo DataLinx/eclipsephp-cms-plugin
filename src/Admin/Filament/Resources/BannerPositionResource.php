@@ -3,6 +3,7 @@
 namespace Eclipse\Cms\Admin\Filament\Resources;
 
 use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages;
+use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\RelationManagers;
 use Eclipse\Cms\Models\Banner\Position as BannerPosition;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -19,17 +20,23 @@ class BannerPositionResource extends Resource
 
     protected static ?string $model = BannerPosition::class;
 
-    protected static bool $shouldRegisterNavigation = false;
-
     protected static ?string $navigationIcon = 'heroicon-o-photo';
 
     protected static ?string $navigationGroup = 'CMS';
+
+    protected static ?string $modelLabel = 'Banner';
+
+    protected static ?string $pluralModelLabel = 'Banners';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make()
+                Forms\Components\Section::make('Position')
+                    ->collapsible()
+                    ->collapsed(
+                        fn ($context) => ($context === 'edit')
+                    )
                     ->compact()
                     ->schema([
                         Forms\Components\TextInput::make('name')
@@ -41,40 +48,51 @@ class BannerPositionResource extends Resource
                             ->alphaDash(),
                     ]),
 
-                Forms\Components\Repeater::make('imageTypes')
-                    ->relationship()
-                    ->columnSpanFull()
-                    ->hiddenLabel()
-                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Image Type')
+                Forms\Components\Section::make('Image Types')
+                    ->collapsible()
+                    ->collapsed(
+                        fn ($context) => ($context === 'edit')
+                    )
+                    ->compact()
                     ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->required()
-                            ->maxLength(255),
+                        Forms\Components\Repeater::make('imageTypes')
+                            ->relationship()
+                            ->columnSpanFull()
+                            ->hiddenLabel()
+                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Image Type')
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->required()
+                                    ->maxLength(255),
 
-                        Forms\Components\TextInput::make('code')
-                            ->alphaDash()
-                            ->maxLength(255),
+                                Forms\Components\TextInput::make('code')
+                                    ->alphaDash()
+                                    ->maxLength(255),
 
-                        Forms\Components\TextInput::make('image_width')
-                            ->numeric()
-                            ->minValue(1)
-                            ->maxValue(9999)
-                            ->label('Width (px)'),
+                                Forms\Components\TextInput::make('image_width')
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->maxValue(9999)
+                                    ->label('Width (px)'),
 
-                        Forms\Components\TextInput::make('image_height')
-                            ->numeric()
-                            ->minValue(1)
-                            ->maxValue(9999)
-                            ->label('Height (px)'),
+                                Forms\Components\TextInput::make('image_height')
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->maxValue(9999)
+                                    ->label('Height (px)'),
 
-                        Forms\Components\Toggle::make('is_hidpi')
-                            ->label('Require HiDPI (2x) images'),
-                    ])
-                    ->columns(2)
-                    ->defaultItems(1)
-                    ->addActionLabel('Add Image Type')
-                    ->reorderableWithButtons()
-                    ->collapsible(),
+                                Forms\Components\Toggle::make('is_hidpi')
+                                    ->label('Require HiDPI (2x) images'),
+                            ])
+                            ->collapsed(
+                                fn ($context) => ($context === 'edit')
+                            )
+                            ->columns(2)
+                            ->defaultItems(1)
+                            ->addActionLabel('Add Image Type')
+                            ->reorderableWithButtons()
+                            ->collapsible(),
+                    ]),
             ]);
     }
 
@@ -113,7 +131,9 @@ class BannerPositionResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            RelationManagers\BannerRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

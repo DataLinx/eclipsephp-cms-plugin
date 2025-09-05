@@ -1,54 +1,37 @@
 <?php
 
-namespace Eclipse\Cms\Admin\Filament\Resources;
+namespace Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\RelationManagers;
 
-use Closure;
-use Eclipse\Cms\Admin\Filament\Resources\BannerResource\Pages;
 use Eclipse\Cms\Models\Banner;
-use Eclipse\Cms\Models\Banner\Position;
+use Eclipse\Cms\Rules\BannerImageDimensionRule;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Resources\Resource;
+use Filament\Resources\RelationManagers\Concerns\Translatable;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class BannerResource extends Resource
+class BannerRelationManager extends RelationManager
 {
     use Translatable;
 
-    protected static ?string $model = Banner::class;
+    protected static string $relationship = 'banners';
 
-    protected static ?string $navigationIcon = 'heroicon-o-photo';
+    protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationGroup = 'CMS';
-
-    protected static ?string $modelLabel = 'Banner';
-
-    protected static ?string $pluralModelLabel = 'Banners';
-
-    public static function form(Form $form): Form
+    public function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\Section::make()
                     ->compact()
                     ->schema([
-                        Forms\Components\Select::make('position_id')
-                            ->label('Position')
-                            ->relationship('position', 'name')
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(fn ($state, Set $set) => $set('images', [])),
-
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->maxLength(255),
@@ -72,46 +55,34 @@ class BannerResource extends Resource
                     ->schema([
                         Forms\Components\Hidden::make('type_id'),
                         Forms\Components\Hidden::make('is_hidpi'),
-                        Forms\Components\Hidden::make('position_id'),
+                        Forms\Components\Hidden::make('image_width'),
+                        Forms\Components\Hidden::make('image_height'),
                         FileUpload::make('file')
                             ->hiddenLabel()
                             ->image()
                             ->directory('banners')
                             ->rules([
-                                function (Get $get) {
-                                    return function (string $attribute, $value, Closure $fail) use ($get): void {
-                                        if (! $value) {
-                                            return;
-                                        }
+                                function (Get $get): BannerImageDimensionRule|string {
+                                    $typeId = $get('type_id');
+                                    $isHidpi = $get('is_hidpi') ?? false;
 
-                                        $typeId = $get('type_id');
-                                        $isHidpi = $get('is_hidpi');
+                                    if ($typeId) {
+                                        return new BannerImageDimensionRule(
+                                            $this->getOwnerRecord(),
+                                            $typeId,
+                                            $isHidpi
+                                        );
+                                    }
 
-                                        if ($typeId) {
-                                            $imageType = Position::find($get('position_id'))?->imageTypes()->find($typeId);
-                                            if ($imageType && $imageType->image_width && $imageType->image_height) {
-                                                $expectedWidth = $isHidpi ? $imageType->image_width * 2 : $imageType->image_width;
-                                                $expectedHeight = $isHidpi ? $imageType->image_height * 2 : $imageType->image_height;
-
-                                                $imageSize = getimagesize($value->getPathname());
-                                                $actualWidth = $imageSize[0] ?? 0;
-                                                $actualHeight = $imageSize[1] ?? 0;
-
-                                                if ($actualWidth !== $expectedWidth || $actualHeight !== $expectedHeight) {
-                                                    $fail("Image must be exactly {$expectedWidth}×{$expectedHeight}px. Got {$actualWidth}×{$actualHeight}px.");
-                                                }
-                                            }
-                                        }
-                                    };
+                                    return 'nullable';
                                 },
                             ])
                             ->helperText(function (Get $get): string {
                                 $typeId = $get('type_id');
                                 $isHidpi = $get('is_hidpi');
-                                $positionId = $get('position_id');
 
-                                if ($typeId && $positionId) {
-                                    $imageType = Position::find($positionId)?->imageTypes()->find($typeId);
+                                if ($typeId) {
+                                    $imageType = $this->getOwnerRecord()->imageTypes()->find($typeId);
                                     if ($imageType && $imageType->image_width && $imageType->image_height) {
                                         if ($isHidpi) {
                                             $hidpiWidth = $imageType->image_width * 2;
@@ -127,42 +98,51 @@ class BannerResource extends Resource
                                 return 'Upload banner image';
                             }),
                     ])
-                    ->default(function (Get $get) {
-                        $positionId = $get('position_id');
-                        if (! $positionId) {
+                    ->default(function () {
+                        $position = $this->getOwnerRecord();
+                        if (! $position) {
                             return [];
                         }
 
                         $items = [];
-                        Position::find($positionId)?->imageTypes()->get()->each(function ($imageType) use (&$items, $positionId) {
+                        $position->imageTypes()->get()->each(function ($imageType) use (&$items) {
                             if ($imageType->is_hidpi) {
-                                $items[] = ['type_id' => $imageType->id, 'is_hidpi' => true, 'position_id' => $positionId];
+                                $items[] = [
+                                    'type_id' => $imageType->id,
+                                    'is_hidpi' => true,
+                                    'image_width' => $imageType->image_width,
+                                    'image_height' => $imageType->image_height,
+                                ];
                             } else {
-                                $items[] = ['type_id' => $imageType->id, 'is_hidpi' => false, 'position_id' => $positionId];
+                                $items[] = [
+                                    'type_id' => $imageType->id,
+                                    'is_hidpi' => false,
+                                    'image_width' => $imageType->image_width,
+                                    'image_height' => $imageType->image_height,
+                                ];
                             }
                         });
 
                         return $items;
                     })
                     ->minItems(0)
-                    ->maxItems(function (Get $get): int {
-                        $positionId = $get('position_id');
-                        if (! $positionId) {
+                    ->maxItems(function (): int {
+                        $position = $this->getOwnerRecord();
+                        if (! $position) {
                             return 0;
                         }
 
-                        return Position::find($positionId)?->imageTypes()->count() ?? 0;
+                        return $position->imageTypes()->count();
                     })
                     ->addable(false)
                     ->deletable(false)
                     ->reorderable(false)
-                    ->itemLabel(function (array $state, Get $get): string {
+                    ->itemLabel(function (array $state): string {
                         $typeId = $state['type_id'] ?? null;
                         $isHidpi = $state['is_hidpi'] ?? false;
-                        $positionId = $get('position_id');
 
-                        if ($typeId && $positionId) {
-                            $imageType = Position::find($positionId)?->imageTypes()->find($typeId);
+                        if ($typeId) {
+                            $imageType = $this->getOwnerRecord()->imageTypes()->find($typeId);
                             if ($imageType) {
                                 if ($imageType->image_width && $imageType->image_height) {
                                     if ($isHidpi) {
@@ -184,13 +164,10 @@ class BannerResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
-                Infolists\Components\TextEntry::make('position.name')
-                    ->label('Position'),
-
                 Infolists\Components\TextEntry::make('name'),
 
                 Infolists\Components\TextEntry::make('link')
@@ -219,9 +196,10 @@ class BannerResource extends Resource
             ]);
     }
 
-    public static function table(Table $table): Table
+    public function table(Table $table): Table
     {
         return $table
+            ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('sort')
                     ->label('#')
@@ -238,11 +216,6 @@ class BannerResource extends Resource
                         })->filter()->values()->toArray();
                     })
                     ->preview(true),
-
-                Tables\Columns\TextColumn::make('position.name')
-                    ->label('Position')
-                    ->sortable()
-                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
@@ -267,10 +240,6 @@ class BannerResource extends Resource
             ])
             ->defaultSort('sort')
             ->filters([
-                Tables\Filters\SelectFilter::make('position_id')
-                    ->relationship('position', 'name')
-                    ->label('Position'),
-
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Active Status')
                     ->boolean()
@@ -287,42 +256,85 @@ class BannerResource extends Resource
 
                 Tables\Filters\TrashedFilter::make(),
             ])
-            ->groups(['position.name'])
             ->reorderable('sort')
+            ->headerActions([
+                Tables\Actions\LocaleSwitcher::make(),
+                Tables\Actions\CreateAction::make()
+                    ->using(function (array $data, string $model): Banner {
+                        $position = $this->getOwnerRecord();
+
+                        $data['position_id'] = $position->id;
+                        $maxSort = $position->banners()->max('sort') ?? 0;
+                        $data['sort'] = $maxSort + 1;
+
+                        $imagesData = $data['images'] ?? [];
+                        unset($data['images']);
+
+                        $banner = $position->banners()->create($data);
+
+                        foreach ($imagesData as $imageData) {
+                            if (isset($imageData['type_id']) && ! empty($imageData['file'])) {
+                                $imageType = $position->imageTypes()->find($imageData['type_id']);
+                                if ($imageType) {
+                                    $banner->images()->create([
+                                        'type_id' => $imageData['type_id'],
+                                        'is_hidpi' => $imageData['is_hidpi'] ?? false,
+                                        'file' => $imageData['file'],
+                                        'image_width' => $imageType->image_width,
+                                        'image_height' => $imageType->image_height,
+                                    ]);
+                                }
+                            }
+                        }
+
+                        $banner->refresh();
+                        $banner->touch();
+
+                        return $banner;
+                    }),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('editPosition')
-                    ->icon('heroicon-o-pencil-square')
-                    ->color('warning')
-                    ->label('Position')
-                    ->url(fn (Model $record): string => BannerPositionResource::getUrl('edit', [
-                        'record' => $record->position,
-                    ])),
+                Tables\Actions\EditAction::make()
+                    ->using(function (Banner $record, array $data): Banner {
+                        $position = $this->getOwnerRecord();
+
+                        $imagesData = $data['images'] ?? [];
+                        unset($data['images']);
+
+                        $record->update($data);
+
+                        $record->images()->delete();
+
+                        foreach ($imagesData as $imageData) {
+                            if (isset($imageData['type_id']) && ! empty($imageData['file'])) {
+                                $imageType = $position->imageTypes()->find($imageData['type_id']);
+                                if ($imageType) {
+                                    $record->images()->create([
+                                        'type_id' => $imageData['type_id'],
+                                        'is_hidpi' => $imageData['is_hidpi'] ?? false,
+                                        'file' => $imageData['file'],
+                                        'image_width' => $imageType->image_width,
+                                        'image_height' => $imageType->image_height,
+                                    ]);
+                                }
+                            }
+                        }
+
+                        $record->refresh();
+                        $record->touch();
+
+                        return $record;
+                    }),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
-    }
-
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListBanners::route('/'),
-            'create' => Pages\CreateBanner::route('/create'),
-            'view' => Pages\ViewBanner::route('/{record}'),
-            'edit' => Pages\EditBanner::route('/{record}/edit'),
-        ];
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
+            ])
+            ->modifyQueryUsing(fn (Builder $query) => $query->withoutGlobalScopes([
                 SoftDeletingScope::class,
-            ]);
+            ]));
     }
 }

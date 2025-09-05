@@ -2,9 +2,7 @@
 
 namespace Eclipse\Cms;
 
-use Eclipse\Cms\Models\Banner;
 use Eclipse\Cms\Models\Banner\Position;
-use Eclipse\Cms\Policies\BannerPolicy;
 use Eclipse\Cms\Policies\BannerPositionPolicy;
 use Eclipse\Common\Foundation\Providers\PackageServiceProvider;
 use Eclipse\Common\Package;
@@ -29,7 +27,6 @@ class CmsServiceProvider extends PackageServiceProvider
     public function bootingPackage(): void
     {
         Gate::policy(Position::class, BannerPositionPolicy::class);
-        Gate::policy(Banner::class, BannerPolicy::class);
 
         ImageColumn::macro(
             'preview',

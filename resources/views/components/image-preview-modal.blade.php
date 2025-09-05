@@ -20,8 +20,8 @@
                 <img :src="currentImage.url" 
                      :alt="getDisplayName()"
                      class="image-preview-lightbox-image">
-                <div class="image-preview-lightbox-info" x-show="getDisplayName() || currentImage.link">
-                    <p class="image-preview-lightbox-title" x-text="getDisplayName()" x-show="getDisplayName()"></p>
+                <div class="image-preview-lightbox-info" x-show="getBannerName() || currentImage.link">
+                    <p class="image-preview-lightbox-title" x-text="getBannerName()" x-show="getBannerName()"></p>
                     <p class="image-preview-lightbox-link" x-show="currentImage.link">
                         <a :href="currentImage.link" target="_blank" x-text="currentImage.link" class="text-blue-400 hover:text-blue-300 underline"></a>
                     </p>
@@ -189,6 +189,10 @@ function imagePreviewLightbox() {
             return this.currentImage.name || this.currentImage.filename || '';
         },
         
+        getBannerName() {
+            return this.currentImage.name || '';
+        },
+        
         init() {
             const self = this;
             document.addEventListener('click', function(e) {
@@ -221,11 +225,17 @@ function imagePreviewLightbox() {
                 if (imgContainer) {
                     const imgs = imgContainer.querySelectorAll('.image-preview-trigger');
                     
+                    const nameCell = row.querySelector('[wire\\:key*="name"]') || row.querySelector('.fi-ta-text');
+                    const linkCell = row.querySelector('[wire\\:key*="link"]') || row.querySelectorAll('.fi-ta-text')[1];
+                    
+                    const bannerName = nameCell ? nameCell.textContent.trim() : '';
+                    const bannerLink = linkCell ? linkCell.textContent.trim() : '';
+                    
                     imgs.forEach((img) => {
                         const imageData = {
                             url: img.src,
-                            name: img.alt || '',
-                            link: '',
+                            name: bannerName,
+                            link: bannerLink && bannerLink !== '—' ? bannerLink : '',
                             filename: img.alt || ''
                         };
                         
