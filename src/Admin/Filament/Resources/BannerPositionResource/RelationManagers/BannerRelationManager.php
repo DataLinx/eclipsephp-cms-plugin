@@ -15,6 +15,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BannerRelationManager extends RelationManager
@@ -209,13 +210,20 @@ class BannerRelationManager extends RelationManager
                     ->circular()
                     ->stacked()
                     ->getStateUsing(function (Banner $record) {
-                        $locale = app()->getLocale();
+                        $locale = $this->activeLocale ?? app()->getLocale();
 
                         return $record->images->map(function ($image) use ($locale) {
                             return $image->getTranslation('file', $locale);
                         })->filter()->values()->toArray();
                     })
-                    ->preview(true),
+                    ->preview(function (Model $record) {
+                        $locale = $this->activeLocale ?? app()->getLocale();
+
+                        return [
+                            'title' => $record->getTranslation('name', $locale).' Banner',
+                            'link' => $record->link ?? '#',
+                        ];
+                    }),
 
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()

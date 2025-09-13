@@ -2,6 +2,7 @@
 
 namespace Workbench\App\Providers;
 
+use Eclipse\Common\CommonServiceProvider;
 use Illuminate\Support\ServiceProvider;
 
 class WorkbenchServiceProvider extends ServiceProvider
@@ -11,6 +12,7 @@ class WorkbenchServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->register(CommonServiceProvider::class);
         $this->app->register(AdminPanelProvider::class);
     }
 
