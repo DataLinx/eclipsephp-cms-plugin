@@ -2,6 +2,7 @@
 
 namespace Eclipse\Cms\Services;
 
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Image\Image;
@@ -10,6 +11,10 @@ class ImageService
 {
     public function createRegularFromHidpi(string $hidpiPath, int $targetWidth, int $targetHeight): string
     {
+        if (! Storage::exists($hidpiPath)) {
+            throw new Exception("HiDPI image not found: {$hidpiPath}");
+        }
+
         $fullHidpiPath = Storage::path($hidpiPath);
 
         $pathInfo = pathinfo($hidpiPath);
@@ -21,10 +26,18 @@ class ImageService
             mkdir($directory, 0755, true);
         }
 
-        Image::load($fullHidpiPath)
-            ->width($targetWidth)
-            ->height($targetHeight)
-            ->save($fullRegularPath);
+        try {
+            Image::load($fullHidpiPath)
+                ->width($targetWidth)
+                ->height($targetHeight)
+                ->save($fullRegularPath);
+        } catch (Exception $e) {
+            throw new Exception("Failed to process HiDPI image: {$e->getMessage()}");
+        }
+
+        if (! file_exists($fullRegularPath)) {
+            throw new Exception("Failed to create regular image: {$fullRegularPath}");
+        }
 
         return $regularPath;
     }

@@ -4,6 +4,8 @@ namespace Eclipse\Cms\Observers;
 
 use Eclipse\Cms\Models\Banner;
 use Eclipse\Cms\Services\ImageService;
+use Exception;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class BannerObserver
@@ -50,19 +52,28 @@ class BannerObserver
             if (! $regularImage) {
                 $hidpiFile = $hidpiImage->getTranslation('file', app()->getLocale());
                 if ($hidpiFile) {
-                    $regularPath = $this->imageService->createRegularFromHidpi(
-                        $hidpiFile,
-                        $imageType->image_width,
-                        $imageType->image_height
-                    );
+                    try {
+                        $regularPath = $this->imageService->createRegularFromHidpi(
+                            $hidpiFile,
+                            $imageType->image_width,
+                            $imageType->image_height
+                        );
 
-                    $banner->images()->create([
-                        'type_id' => $hidpiImage->type_id,
-                        'file' => [app()->getLocale() => $regularPath],
-                        'is_hidpi' => false,
-                        'image_width' => $imageType->image_width,
-                        'image_height' => $imageType->image_height,
-                    ]);
+                        $banner->images()->create([
+                            'type_id' => $hidpiImage->type_id,
+                            'file' => [app()->getLocale() => $regularPath],
+                            'is_hidpi' => false,
+                            'image_width' => $imageType->image_width,
+                            'image_height' => $imageType->image_height,
+                        ]);
+                    } catch (Exception $e) {
+                        Log::error('Failed to create regular image from HiDPI', [
+                            'hidpi_file' => $hidpiFile,
+                            'banner_id' => $banner->id,
+                            'image_type_id' => $imageType->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
                 }
             }
         });

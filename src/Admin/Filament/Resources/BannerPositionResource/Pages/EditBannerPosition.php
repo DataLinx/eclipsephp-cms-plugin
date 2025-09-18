@@ -10,12 +10,20 @@ class EditBannerPosition extends EditRecord
 {
     use EditRecord\Concerns\Translatable;
 
+    protected static ?string $breadcrumb = 'Edit Position';
+
     protected static string $resource = BannerPositionResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\ViewAction::make()
+                ->color('primary')
+                ->icon('heroicon-o-photo')
+                ->label('Manage Banners'),
+            Actions\DeleteAction::make()
+                ->icon('heroicon-o-trash')
+                ->label('Delete Position'),
             Actions\LocaleSwitcher::make(),
         ];
     }

@@ -280,3 +280,68 @@ it('triggers observer for hidpi image processing', function () {
     expect($regularImage->image_height)->toBe(300);
     expect($regularImage->getTranslation('file', 'en'))->toBe('banners/test-hidpi_1x.png');
 });
+
+it('displays separate image columns for each image type', function () {
+    $banner = Banner::factory()->create([
+        'position_id' => $this->position->id,
+    ]);
+
+    $banner->images()->create([
+        'type_id' => $this->position->imageTypes->first()->id,
+        'file' => ['en' => 'banners/desktop-image.png'],
+        'is_hidpi' => false,
+        'image_width' => 1200,
+        'image_height' => 400,
+    ]);
+
+    $banner->images()->create([
+        'type_id' => $this->position->imageTypes->skip(1)->first()->id,
+        'file' => ['en' => 'banners/mobile-image.png'],
+        'is_hidpi' => true,
+        'image_width' => 1200,
+        'image_height' => 600,
+    ]);
+
+    $component = livewire(BannerRelationManager::class, [
+        'ownerRecord' => $this->position,
+        'pageClass' => 'Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages\EditBannerPosition',
+    ]);
+
+    foreach ($this->position->imageTypes as $imageType) {
+        $component->assertTableColumnExists("image_type_{$imageType->id}");
+    }
+
+    $component->assertCanSeeTableRecords([$banner]);
+});
+
+it('preserves existing images when editing banner without changing images', function () {
+    $banner = Banner::factory()->create([
+        'position_id' => $this->position->id,
+    ]);
+
+    $banner->images()->create([
+        'type_id' => $this->position->imageTypes->first()->id,
+        'file' => ['en' => 'banners/test-image.png'],
+        'is_hidpi' => false,
+        'image_width' => 1200,
+        'image_height' => 600,
+    ]);
+
+    expect($banner->images()->count())->toBe(1, 'Should start with 1 image');
+
+    livewire(BannerRelationManager::class, [
+        'ownerRecord' => $this->position,
+        'pageClass' => 'Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages\EditBannerPosition',
+    ])
+        ->callTableAction('edit', $banner, data: [
+            'name' => 'Updated Banner Name',
+            'link' => $banner->link,
+            'is_active' => $banner->is_active,
+            'new_tab' => $banner->new_tab,
+        ])
+        ->assertHasNoTableActionErrors();
+
+    $banner->refresh();
+    expect($banner->images()->count())->toBe(1, 'Should still have 1 image after edit');
+    expect($banner->getTranslation('name', 'en'))->toBe('Updated Banner Name');
+});

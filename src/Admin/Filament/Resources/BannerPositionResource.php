@@ -2,8 +2,8 @@
 
 namespace Eclipse\Cms\Admin\Filament\Resources;
 
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages;
-use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\RelationManagers;
 use Eclipse\Cms\Models\Banner\Position as BannerPosition;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -14,7 +14,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class BannerPositionResource extends Resource
+class BannerPositionResource extends Resource implements HasShieldPermissions
 {
     use Translatable;
 
@@ -28,15 +28,31 @@ class BannerPositionResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Banners';
 
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view_any',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+            'restore',
+            'restore_any',
+            'manage_banners',
+        ];
+    }
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\Section::make('Position')
-                    ->collapsible()
-                    ->collapsed(
-                        fn ($context) => ($context === 'edit')
+                    ->hidden(
+                        fn (string $context): bool => ($context === 'view')
                     )
+                    ->collapsible()
                     ->compact()
                     ->schema([
                         Forms\Components\TextInput::make('name')
@@ -49,10 +65,10 @@ class BannerPositionResource extends Resource
                     ]),
 
                 Forms\Components\Section::make('Image Types')
-                    ->collapsible()
-                    ->collapsed(
-                        fn ($context) => ($context === 'edit')
+                    ->hidden(
+                        fn (string $context): bool => ($context === 'view')
                     )
+                    ->collapsible()
                     ->compact()
                     ->schema([
                         Forms\Components\Repeater::make('imageTypes')
@@ -84,9 +100,6 @@ class BannerPositionResource extends Resource
                                 Forms\Components\Toggle::make('is_hidpi')
                                     ->label('Require HiDPI (2x) images'),
                             ])
-                            ->collapsed(
-                                fn ($context) => ($context === 'edit')
-                            )
                             ->columns(2)
                             ->defaultItems(1)
                             ->addActionLabel('Add Image Type')
@@ -119,8 +132,12 @@ class BannerPositionResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('Manage banners'),
+                Tables\Actions\EditAction::make()
+                    ->label('Edit position'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Delete position'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -132,7 +149,6 @@ class BannerPositionResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\BannerRelationManager::class,
         ];
     }
 
@@ -141,22 +157,8 @@ class BannerPositionResource extends Resource
         return [
             'index' => Pages\ListBannerPositions::route('/'),
             'create' => Pages\CreateBannerPosition::route('/create'),
+            'view' => Pages\ViewBannerPosition::route('/{record}'),
             'edit' => Pages\EditBannerPosition::route('/{record}/edit'),
-        ];
-    }
-
-    public static function getPermissions(): array
-    {
-        return [
-            'view_any',
-            'create',
-            'update',
-            'delete',
-            'delete_any',
-            'force_delete',
-            'force_delete_any',
-            'restore',
-            'restore_any',
         ];
     }
 

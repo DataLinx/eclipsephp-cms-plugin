@@ -4,6 +4,7 @@ use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource;
 use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages\CreateBannerPosition;
 use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages\EditBannerPosition;
 use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages\ListBannerPositions;
+use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages\ViewBannerPosition;
 use Eclipse\Cms\Models\Banner;
 use Eclipse\Cms\Models\Banner\Position;
 use Illuminate\Support\Facades\Storage;
@@ -134,6 +135,37 @@ it('can filter positions', function () {
     livewire(ListBannerPositions::class)
         ->assertCanSeeTableRecords($positions)
         ->assertTableFilterExists('trashed');
+});
+
+it('can render position view page', function () {
+    $position = Position::factory()->create();
+
+    $this->get(BannerPositionResource::getUrl('view', ['record' => $position]))
+        ->assertSuccessful();
+});
+
+it('can view position and manage banners', function () {
+    $position = Position::factory()->create();
+
+    livewire(ViewBannerPosition::class, [
+        'record' => $position->getRouteKey(),
+    ])
+        ->assertSuccessful();
+});
+
+it('can access edit from view page', function () {
+    $this->setUpSuperAdmin();
+
+    $position = Position::factory()->create();
+
+    $component = livewire(ViewBannerPosition::class, [
+        'record' => $position->getRouteKey(),
+    ])
+        ->assertSuccessful();
+
+    $editUrl = BannerPositionResource::getUrl('edit', ['record' => $position]);
+    expect($editUrl)->toContain('edit');
+    expect($editUrl)->toContain((string) $position->getRouteKey());
 });
 
 it('deletes all related banners and image files when position is deleted', function () {

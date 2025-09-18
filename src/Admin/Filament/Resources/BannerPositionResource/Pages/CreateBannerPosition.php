@@ -12,6 +12,13 @@ class CreateBannerPosition extends CreateRecord
 
     protected static string $resource = BannerPositionResource::class;
 
+    protected static ?string $breadcrumb = 'Create Position';
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->previousUrl ?? $this->getResource()::getUrl('view');
+    }
+
     protected function getHeaderActions(): array
     {
         return [

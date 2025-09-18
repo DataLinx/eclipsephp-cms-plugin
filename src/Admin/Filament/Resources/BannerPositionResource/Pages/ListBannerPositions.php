@@ -16,6 +16,7 @@ class ListBannerPositions extends ListRecords
     {
         return [
             Actions\CreateAction::make()
+                ->icon('heroicon-o-plus-circle')
                 ->label('New Position'),
             Actions\LocaleSwitcher::make(),
         ];
