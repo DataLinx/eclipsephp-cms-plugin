@@ -4,8 +4,8 @@ namespace Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\RelationMa
 
 use Eclipse\Cms\Models\Banner;
 use Eclipse\Cms\Rules\BannerImageDimensionRule;
-use Eclipse\Common\Admin\Filament\Tables\Columns\SliderColumn;
-use Eclipse\Common\Foundation\Helpers\MediaHelper;
+use Eclipse\Common\Filament\Tables\Columns\ImageColumn;
+use Eclipse\Common\Helpers\MediaHelper;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Form;
@@ -42,8 +42,9 @@ class BannerRelationManager extends RelationManager
         $imageTypes = $position->imageTypes()->get();
 
         return $imageTypes->map(function ($imageType) {
-            return SliderColumn::make("image_type_{$imageType->id}")
+            return ImageColumn::make("image_type_{$imageType->id}")
                 ->label($imageType->name)
+                ->preview()
                 ->getStateUsing(function (Banner $record) use ($imageType) {
                     $locale = $this->activeLocale ?? app()->getLocale();
                     $image = $record->images->where('type_id', $imageType->id)->first();
