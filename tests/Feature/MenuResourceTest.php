@@ -210,7 +210,7 @@ it('can render menu item sorting page', function () {
 it('can access menu item sorting page from relation manager', function () {
     $menu = Menu::factory()->create();
 
-    $response = $this->get(MenuResource::getUrl('view', ['record' => $menu]));
+    $response = $this->get(MenuResource::getUrl('edit', ['record' => $menu]));
     $response->assertSuccessful();
 
     $response = $this->get(MenuResource::getUrl('sort-items', ['record' => $menu]));
@@ -218,4 +218,100 @@ it('can access menu item sorting page from relation manager', function () {
 
     expect($response->getContent())->toContain('Sort Menu Items');
     expect($response->getContent())->toContain("Drag and drop to reorder menu items for: {$menu->title}");
+});
+
+it('deletes all menu items when menu is soft deleted', function () {
+    $menu = Menu::factory()->create();
+    $rootItem = $menu->allItems()->create([
+        'label' => ['en' => 'Root Item'],
+        'parent_id' => -1,
+        'type' => 'Group',
+        'is_active' => true,
+        'sort' => 1,
+    ]);
+
+    $childItem = $menu->allItems()->create([
+        'label' => ['en' => 'Child Item'],
+        'parent_id' => $rootItem->id,
+        'type' => 'Group',
+        'is_active' => true,
+        'sort' => 1,
+    ]);
+
+    $grandchildItem = $menu->allItems()->create([
+        'label' => ['en' => 'Grandchild Item'],
+        'parent_id' => $childItem->id,
+        'type' => 'Group',
+        'is_active' => true,
+        'sort' => 1,
+    ]);
+
+    $menu->delete();
+
+    $this->assertSoftDeleted($menu);
+    $this->assertSoftDeleted($rootItem);
+    $this->assertSoftDeleted($childItem);
+    $this->assertSoftDeleted($grandchildItem);
+});
+
+it('force deletes all menu items when menu is force deleted', function () {
+    $menu = Menu::factory()->create();
+    $rootItem = $menu->allItems()->create([
+        'label' => ['en' => 'Root Item'],
+        'parent_id' => -1,
+        'type' => 'Group',
+        'is_active' => true,
+        'sort' => 1,
+    ]);
+
+    $childItem = $menu->allItems()->create([
+        'label' => ['en' => 'Child Item'],
+        'parent_id' => $rootItem->id,
+        'type' => 'Group',
+        'is_active' => true,
+        'sort' => 1,
+    ]);
+
+    $grandchildItem = $menu->allItems()->create([
+        'label' => ['en' => 'Grandchild Item'],
+        'parent_id' => $childItem->id,
+        'type' => 'Group',
+        'is_active' => true,
+        'sort' => 1,
+    ]);
+
+    $menu->forceDelete();
+
+    $this->assertModelMissing($menu);
+    $this->assertModelMissing($rootItem);
+    $this->assertModelMissing($childItem);
+    $this->assertModelMissing($grandchildItem);
+});
+
+it('can restore menu', function () {
+    $menu = Menu::factory()->create();
+
+    $menu->delete();
+
+    $menu->restore();
+
+    expect($menu->fresh()->trashed())->toBeFalse();
+});
+
+it('can force delete menu and its items', function () {
+    $menu = Menu::factory()->create();
+    $item = $menu->allItems()->create([
+        'label' => ['en' => 'Test Item'],
+        'parent_id' => -1,
+        'type' => 'Group',
+        'is_active' => true,
+        'sort' => 1,
+    ]);
+
+    $menu->delete();
+
+    $menu->forceDelete();
+
+    $this->assertModelMissing($menu);
+    $this->assertModelMissing($item);
 });

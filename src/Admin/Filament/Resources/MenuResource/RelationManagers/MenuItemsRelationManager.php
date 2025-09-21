@@ -149,13 +149,16 @@ class MenuItemsRelationManager extends RelationManager
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-                Tables\Actions\Action::make('addSublink')
+                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\Action::make('addSubitem')
                     ->icon('heroicon-o-plus-circle')
                     ->color('warning')
-                    ->label('Add Sublink')
+                    ->label('Add Sub-item')
                     ->form(fn () => $this->getMenuItemFormSchema(excludeId: null))
                     ->fillForm(fn (Model $record): array => [
                         'parent_id' => $record->id,
+                        'is_active' => true,
                     ])
                     ->action(function (array $data, Model $record): void {
                         $data['menu_id'] = $this->getOwnerRecord()->id;
@@ -168,6 +171,7 @@ class MenuItemsRelationManager extends RelationManager
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }

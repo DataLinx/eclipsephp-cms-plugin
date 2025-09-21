@@ -49,9 +49,9 @@ class SortMenuItems extends Page implements HasTree
 
         $breadcrumbs = [
             $resource::getUrl() => $resource::getBreadcrumb(),
-            $resource::getUrl('view', [
+            $resource::getUrl('edit', [
                 'record' => $this->record->id,
-            ]) => "View {$this->record->title}",
+            ]) => "Edit {$this->record->title}",
             ...(filled($breadcrumb = $this->getBreadcrumb()) ? [$breadcrumb] : []),
         ];
 

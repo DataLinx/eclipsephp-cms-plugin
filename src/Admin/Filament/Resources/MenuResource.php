@@ -2,6 +2,7 @@
 
 namespace Eclipse\Cms\Admin\Filament\Resources;
 
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Eclipse\Cms\Admin\Filament\Resources\MenuResource\Pages;
 use Eclipse\Cms\Admin\Filament\Resources\MenuResource\RelationManagers;
 use Eclipse\Cms\Models\Menu;
@@ -16,7 +17,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class MenuResource extends Resource
+class MenuResource extends Resource implements HasShieldPermissions
 {
     use Translatable;
 
@@ -117,7 +118,6 @@ class MenuResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -142,9 +142,25 @@ class MenuResource extends Resource
         return [
             'index' => Pages\ListMenus::route('/'),
             'create' => Pages\CreateMenu::route('/create'),
-            'view' => Pages\ViewMenu::route('/{record}'),
             'edit' => Pages\EditMenu::route('/{record}/edit'),
             'sort-items' => Pages\SortMenuItems::route('/{record}/sort-items'),
+        ];
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
         ];
     }
 

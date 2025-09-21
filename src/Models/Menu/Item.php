@@ -28,6 +28,12 @@ class Item extends Model
                 $child->delete();
             });
         });
+
+        static::forceDeleting(function ($menuItem) {
+            $menuItem->children()->withTrashed()->get()->each(function ($child) {
+                $child->forceDelete();
+            });
+        });
     }
 
     protected static function newFactory(): MenuItemFactory

@@ -34,6 +34,12 @@ class Menu extends Model
             });
         });
 
+        static::forceDeleting(function ($menu) {
+            $menu->allItems()->withTrashed()->get()->each(function ($item) {
+                $item->forceDelete();
+            });
+        });
+
         if (config('eclipse-cms.tenancy.enabled')) {
             static::addGlobalScope('tenant', function (Builder $builder) {
                 $currentTenant = Filament::getTenant();
