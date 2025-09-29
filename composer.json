@@ -42,10 +42,10 @@
     },
     "require": {
         "php": "^8.2",
-        "bezhansalleh/filament-shield": "^3.3",
+        "bezhansalleh/filament-shield": "^4.0",
         "datalinx/php-utils": "^2.5",
         "eclipsephp/common": "dev-main",
-        "filament/filament": "^3.3",
+        "filament/filament": "^4.0",
         "spatie/laravel-package-tools": "^1.19"
     },
     "require-dev": {
