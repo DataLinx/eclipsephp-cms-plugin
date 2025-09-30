@@ -3,7 +3,6 @@
 namespace Eclipse\Cms\Admin\Filament\Resources;
 
 use Eclipse\Cms\Admin\Filament\Resources\SectionResource\Pages;
-use Eclipse\Cms\Admin\Filament\Resources\SectionResource\RelationManagers;
 use Eclipse\Cms\Enums\SectionType;
 use Eclipse\Cms\Models\Section;
 use Filament\Forms\Components\Placeholder;
@@ -43,6 +42,8 @@ class SectionResource extends Resource
     protected static bool $shouldRegisterNavigation = true;
 
     protected static ?string $navigationLabel = 'Sections';
+
+    protected static ?int $navigationSort = 20;
 
     public static function form(Form $form): Form
     {
@@ -143,9 +144,7 @@ class SectionResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            RelationManagers\PagesRelationManager::class,
-        ];
+        return [];
     }
 
     public static function getPages(): array

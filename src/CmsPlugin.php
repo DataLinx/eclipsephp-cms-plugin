@@ -31,7 +31,7 @@ class CmsPlugin extends Plugin
                             'sId' => $section->id,
                         ])
                     )
-                    ->icon('heroicon-o-arrow-turn-down-right')
+                    ->icon('heroicon-o-document-text')
                     ->group('CMS')
                     ->sort(10)
                     ->visible(fn (): bool => $section->{config('eclipse-cms.tenancy.foreign_key')} === Filament::getTenant()?->id)

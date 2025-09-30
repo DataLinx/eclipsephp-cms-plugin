@@ -43,7 +43,7 @@ class PageResource extends Resource
 
     protected static ?string $navigationGroup = 'CMS';
 
-    protected static bool $shouldRegisterNavigation = true;
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $navigationLabel = 'Pages';
 
@@ -165,10 +165,6 @@ class PageResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->when(
-                request()->get('sId'),
-                fn (Builder $q, $sId) => $q->where('section_id', $sId)
-            ))
             ->columns([
                 TextColumn::make('title')
                     ->label('Page Title')
@@ -186,7 +182,8 @@ class PageResource extends Resource
                     ->label('Section')
                     ->sortable()
                     ->badge()
-                    ->color('gray'),
+                    ->color('gray')
+                    ->hidden(fn () => request()->has('sId')),
 
                 TextColumn::make('sef_key')
                     ->label('URL Slug')
