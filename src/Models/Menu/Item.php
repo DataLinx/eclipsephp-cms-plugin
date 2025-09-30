@@ -5,6 +5,9 @@ namespace Eclipse\Cms\Models\Menu;
 use Eclipse\Cms\Enums\MenuItemType;
 use Eclipse\Cms\Factories\MenuItemFactory;
 use Eclipse\Cms\Models\Menu;
+use Eclipse\Common\Foundation\Models\Scopes\ActiveScope;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use SolutionForest\FilamentTree\Concern\ModelTree;
 use Spatie\Translatable\HasTranslations;
 
+#[ScopedBy([ActiveScope::class])]
 class Item extends Model
 {
     use HasFactory, HasTranslations, ModelTree, SoftDeletes;
@@ -112,9 +116,16 @@ class Item extends Model
         return $this->children()->exists();
     }
 
-    public function scopeActive($query)
+    public static function allNodes()
     {
-        return $query->where('is_active', true);
+        return static::buildSortQuery()->get();
+    }
+
+    public static function buildSortQuery(): Builder
+    {
+        return static::withoutGlobalScope(ActiveScope::class)
+            ->withTrashed()
+            ->ordered();
     }
 
     public function scopeRootItems($query)

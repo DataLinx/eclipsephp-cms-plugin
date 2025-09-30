@@ -16,7 +16,6 @@ class EditMenu extends EditRecord
     {
         return [
             Actions\LocaleSwitcher::make(),
-            Actions\ViewAction::make(),
             Actions\DeleteAction::make(),
             Actions\ForceDeleteAction::make(),
             Actions\RestoreAction::make(),

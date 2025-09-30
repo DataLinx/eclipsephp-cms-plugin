@@ -5,6 +5,7 @@ use Eclipse\Cms\Models\Menu;
 use Eclipse\Cms\Models\Menu\Item;
 use Eclipse\Cms\Models\Page;
 use Eclipse\Cms\Models\Section;
+use Eclipse\Common\Foundation\Models\Scopes\ActiveScope;
 
 it('can create a menu item', function () {
     $menu = Menu::factory()->create();
@@ -111,10 +112,10 @@ it('getUrl returns linkable URL for linkable type', function () {
 
 it('can check if item has children', function () {
     $menu = Menu::factory()->create();
-    $parent = Item::factory()->create(['menu_id' => $menu->id]);
-    $childless = Item::factory()->create(['menu_id' => $menu->id]);
+    $parent = Item::factory()->active()->create(['menu_id' => $menu->id]);
+    $childless = Item::factory()->active()->create(['menu_id' => $menu->id]);
 
-    Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
+    Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
 
     expect($parent->hasChildren())->toBeTrue()
         ->and($childless->hasChildren())->toBeFalse();
@@ -127,13 +128,15 @@ it('has proper scopes', function () {
     $rootItem = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => -1]);
     $childItem = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $rootItem->id]);
 
-    expect(Item::active()->count())->toBe(3);
+    expect(Item::count())->toBe(3);
 
-    expect(Item::where('is_active', false)->count())->toBe(1);
+    expect(Item::withoutGlobalScope(ActiveScope::class)->where('is_active', false)->count())->toBe(1);
 
-    expect(Item::rootItems()->count())->toBe(3);
+    expect(Item::rootItems()->count())->toBe(2);
 
     expect(Item::where('parent_id', '!=', -1)->count())->toBe(1);
+
+    expect(Item::withoutGlobalScope(ActiveScope::class)->rootItems()->count())->toBe(3);
 });
 
 it('has proper casts', function () {
@@ -221,7 +224,7 @@ it('can get full path', function () {
 
 it('can get hierarchical options', function () {
     $menu = Menu::factory()->create();
-    $items = Item::factory()->count(3)->create(['menu_id' => $menu->id]);
+    $items = Item::factory()->active()->count(3)->create(['menu_id' => $menu->id]);
 
     $options = Item::getHierarchicalOptions($menu->id);
 
@@ -248,9 +251,9 @@ it('deleting parent item cascades to delete children', function () {
 
 it('deleting parent item cascades to nested children recursively', function () {
     $menu = Menu::factory()->create();
-    $grandparent = Item::factory()->create(['menu_id' => $menu->id]);
-    $parent = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $grandparent->id]);
-    $child = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
+    $grandparent = Item::factory()->active()->create(['menu_id' => $menu->id]);
+    $parent = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $grandparent->id]);
+    $child = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
 
     expect($grandparent->children)->toHaveCount(1);
     expect($parent->children)->toHaveCount(1);

@@ -44,8 +44,8 @@ it('can have menu items', function () {
 it('items relationship returns only root items', function () {
     $menu = Menu::factory()->create();
 
-    $rootItem = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => -1]);
-    $childItem = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $rootItem->id]);
+    $rootItem = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => -1]);
+    $childItem = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $rootItem->id]);
 
     expect($menu->items)->toHaveCount(1)
         ->and($menu->items->first()->id)->toBe($rootItem->id)

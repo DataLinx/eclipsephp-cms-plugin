@@ -4,6 +4,7 @@ namespace Eclipse\Cms\Models;
 
 use Eclipse\Cms\Factories\MenuFactory;
 use Eclipse\Cms\Models\Menu\Item;
+use Eclipse\Common\Foundation\Models\Scopes\ActiveScope;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -85,7 +86,9 @@ class Menu extends Model
 
     public function allItems(): HasMany
     {
-        return $this->hasMany(Item::class)->orderedForTree();
+        return $this->hasMany(Item::class)
+            ->withoutGlobalScope(ActiveScope::class)
+            ->orderedForTree();
     }
 
     public function site(): BelongsTo

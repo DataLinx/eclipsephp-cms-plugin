@@ -5,21 +5,24 @@ namespace Eclipse\Cms\Admin\Filament\Resources\MenuResource\RelationManagers;
 use Eclipse\Cms\Admin\Filament\Resources\MenuResource;
 use Eclipse\Cms\Enums\MenuItemType;
 use Eclipse\Cms\Models\Menu\Item;
-use Eclipse\Cms\Models\Page;
-use Eclipse\Cms\Models\Section;
+use Eclipse\Common\Foundation\Models\Scopes\ActiveScope;
+use Eclipse\Common\Foundation\Plugins\HasLinkables;
+use Filament\Facades\Filament;
 use Filament\Forms;
-use Filament\Forms\Components\MorphToSelect;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\RelationManagers\Concerns\Translatable;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\HtmlString;
 
 class MenuItemsRelationManager extends RelationManager
@@ -31,6 +34,19 @@ class MenuItemsRelationManager extends RelationManager
     protected static string $relationship = 'allItems';
 
     protected static ?string $recordTitleAttribute = 'label';
+
+    protected function getLinkableTypes(): array
+    {
+        $linkables = [];
+
+        foreach (Filament::getCurrentPanel()?->getPlugins() ?? [] as $plugin) {
+            if ($plugin instanceof HasLinkables) {
+                $linkables = array_merge($linkables, $plugin->getLinkables());
+            }
+        }
+
+        return $linkables;
+    }
 
     protected function getMenuItemFormSchema(?int $excludeId = null): array
     {
@@ -62,14 +78,7 @@ class MenuItemsRelationManager extends RelationManager
             Forms\Components\MorphToSelect::make('linkable')
                 ->columnSpanFull()
                 ->label('Link Target')
-                ->types([
-                    MorphToSelect\Type::make(Page::class)
-                        ->titleAttribute('title')
-                        ->label('Page'),
-                    MorphToSelect\Type::make(Section::class)
-                        ->titleAttribute('name')
-                        ->label('Section'),
-                ])
+                ->types($this->getLinkableTypes())
                 ->searchable()
                 ->preload()
                 ->required()
@@ -118,17 +127,34 @@ class MenuItemsRelationManager extends RelationManager
                     ->sortable(false),
             ])
             ->filters([
+                TernaryFilter::make('is_active')
+                    ->label('Status')
+                    ->placeholder('Active only')
+                    ->trueLabel('All')
+                    ->falseLabel('Inactive only')
+                    ->queries(
+                        true: fn ($query) => $query,
+                        false: fn ($query) => $query->where('is_active', false),
+                        blank: fn ($query) => $query->where('is_active', true),
+                    )
+                    ->baseQuery(fn (Builder $query) => $query->withoutGlobalScope(ActiveScope::class))
+                    ->indicateUsing(function (array $state): array {
+                        if ($state['value'] ?? null) {
+                            return [Tables\Filters\Indicator::make('All')];
+                        }
+
+                        if (($state['value'] ?? null) === false) {
+                            return [Tables\Filters\Indicator::make('Inactive only')];
+                        }
+
+                        return [];
+                    }),
+
                 TrashedFilter::make(),
 
                 SelectFilter::make('type')
                     ->options(MenuItemType::class)
                     ->multiple(),
-                SelectFilter::make('is_active')
-                    ->label('Status')
-                    ->options([
-                        1 => 'Active',
-                        0 => 'Inactive',
-                    ]),
                 SelectFilter::make('parent_id')
                     ->label('Parent Item')
                     ->options(fn () => Item::getParentOptions($this->getOwnerRecord()->id))
@@ -169,10 +195,52 @@ class MenuItemsRelationManager extends RelationManager
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('activate')
+                        ->label('Activate')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->action(fn ($records) => $records->each->update(['is_active' => true]))
+                        ->deselectRecordsAfterCompletion()
+                        ->hidden(function (HasTable $livewire): bool {
+                            $filterState = $livewire->getTableFilterState('is_active') ?? [];
+
+                            if (! array_key_exists('value', $filterState)) {
+                                return true;
+                            }
+
+                            return blank($filterState['value']);
+                        }),
+                    Tables\Actions\BulkAction::make('deactivate')
+                        ->label('Deactivate')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('warning')
+                        ->action(fn ($records) => $records->each->update(['is_active' => false]))
+                        ->deselectRecordsAfterCompletion()
+                        ->hidden(function (HasTable $livewire): bool {
+                            $filterState = $livewire->getTableFilterState('is_active') ?? [];
+
+                            if (! array_key_exists('value', $filterState)) {
+                                return false;
+                            }
+
+                            if ($filterState['value']) {
+                                return false;
+                            }
+
+                            return filled($filterState['value']);
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
                     Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    public function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
             ]);
     }
 }

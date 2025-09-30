@@ -32,6 +32,11 @@ class Section extends Model
         return $attr;
     }
 
+    public function getUrl(): ?string
+    {
+        return "/section/{$this->id}";
+    }
+
     protected static function newFactory(): SectionFactory
     {
         return SectionFactory::new();
