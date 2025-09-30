@@ -15,10 +15,19 @@ class ListPages extends ListRecords
 
     protected static string $resource = PageResource::class;
 
+    public ?int $sectionId = null;
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        $this->sectionId = request()->get('sId');
+    }
+
     public function getTitle(): string
     {
-        if ($sectionId = request()->get('sId')) {
-            $section = Section::find($sectionId);
+        if ($this->sectionId) {
+            $section = Section::find($this->sectionId);
             if ($section) {
                 return $section->name;
             }
@@ -29,8 +38,8 @@ class ListPages extends ListRecords
 
     public function getBreadcrumb(): ?string
     {
-        if ($sectionId = request()->get('sId')) {
-            $section = Section::find($sectionId);
+        if ($this->sectionId) {
+            $section = Section::find($this->sectionId);
             if ($section) {
                 return $section->name;
             }
@@ -43,8 +52,8 @@ class ListPages extends ListRecords
     {
         $query = parent::getTableQuery();
 
-        if ($sectionId = request()->get('sId')) {
-            $query->where('section_id', $sectionId);
+        if ($this->sectionId) {
+            $query->where('section_id', $this->sectionId);
         }
 
         return $query;
@@ -54,10 +63,10 @@ class ListPages extends ListRecords
     {
         $createAction = CreateAction::make();
 
-        if (request()->get('sId')) {
+        if ($this->sectionId) {
             $createAction
                 ->url(fn () => PageResource::getUrl('create', [
-                    'sId' => request()->get('sId'),
+                    'sId' => $this->sectionId,
                 ]));
         }
 

@@ -183,7 +183,7 @@ class PageResource extends Resource
                     ->sortable()
                     ->badge()
                     ->color('gray')
-                    ->hidden(fn () => request()->has('sId')),
+                    ->visible(fn ($livewire): bool => ! ($livewire instanceof Pages\ListPages && $livewire->sectionId)),
 
                 TextColumn::make('sef_key')
                     ->label('URL Slug')
