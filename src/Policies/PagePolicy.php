@@ -19,14 +19,6 @@ class PagePolicy
     }
 
     /**
-     * Determine whether the user can view the model.
-     */
-    public function view(Authorizable $user, Page $page): bool
-    {
-        return $user->can('view_page');
-    }
-
-    /**
      * Determine whether the user can create models.
      */
     public function create(Authorizable $user): bool

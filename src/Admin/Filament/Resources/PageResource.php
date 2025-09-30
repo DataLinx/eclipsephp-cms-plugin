@@ -265,7 +265,6 @@ class PageResource extends Resource
     {
         return [
             'view_any',
-            'view',
             'create',
             'update',
             'delete',

@@ -42,7 +42,7 @@ class PageFactory extends Factory
                 'en' => $slug,
                 'sl' => "{$slug}-si",
             ],
-            'code' => $this->faker->unique()->word(),
+            'code' => $this->faker->unique()->numerify('page-###-####'),
             'status' => $this->faker->randomElement([PageStatus::Draft, PageStatus::Published]),
             'type' => 'page',
             'created_at' => Carbon::now(),

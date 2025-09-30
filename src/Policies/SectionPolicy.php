@@ -19,14 +19,6 @@ class SectionPolicy
     }
 
     /**
-     * Determine whether the user can view the model.
-     */
-    public function view(Authorizable $user, Section $section): bool
-    {
-        return $user->can('view_section');
-    }
-
-    /**
      * Determine whether the user can create models.
      */
     public function create(Authorizable $user): bool
