@@ -30,6 +30,11 @@ class Page extends Model
         return $this->belongsTo(Section::class);
     }
 
+    public function getUrl(): ?string
+    {
+        return $this->sef_key ? "/{$this->sef_key}" : null;
+    }
+
     protected static function newFactory(): PageFactory
     {
         return PageFactory::new();
