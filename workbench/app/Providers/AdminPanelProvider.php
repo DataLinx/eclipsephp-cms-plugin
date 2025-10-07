@@ -49,6 +49,8 @@ class AdminPanelProvider extends PanelProvider
                 SpatieLaravelTranslatablePlugin::make()
                     ->defaultLocales(['en', 'sl']),
                 CmsPlugin::make(),
+                SpatieLaravelTranslatablePlugin::make()
+                    ->defaultLocales(['en', 'sl']),
             ])
             ->pages([
                 Dashboard::class,

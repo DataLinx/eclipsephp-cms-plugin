@@ -2,7 +2,9 @@
 
 namespace Eclipse\Cms;
 
+use Eclipse\Cms\Models\Banner\Position;
 use Eclipse\Cms\Models\Menu;
+use Eclipse\Cms\Policies\BannerPositionPolicy;
 use Eclipse\Cms\Policies\MenuPolicy;
 use Eclipse\Common\Foundation\Providers\PackageServiceProvider;
 use Eclipse\Common\Package;
@@ -17,12 +19,14 @@ class CmsServiceProvider extends PackageServiceProvider
     {
         $package->name(static::$name)
             ->hasConfigFile()
+            ->hasViews()
             ->discoversMigrations()
             ->runsMigrations();
     }
 
     public function bootingPackage(): void
     {
+        Gate::policy(Position::class, BannerPositionPolicy::class);
         Gate::policy(Menu::class, MenuPolicy::class);
     }
 }

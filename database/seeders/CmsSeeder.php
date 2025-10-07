@@ -13,6 +13,8 @@ class CmsSeeder extends Seeder
             ->count(3)
             ->create();
 
-        $this->call(MenuSeeder::class);
+        $this
+            ->call(BannerSeeder::class)
+            ->call(MenuSeeder::class);
     }
 }
