@@ -14,6 +14,7 @@ class CmsSeeder extends Seeder
             ->create();
 
         $this
-            ->call(BannerSeeder::class);
+            ->call(BannerSeeder::class)
+            ->call(MenuSeeder::class);
     }
 }

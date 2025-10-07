@@ -4,6 +4,8 @@ namespace Eclipse\Cms;
 
 use Eclipse\Cms\Models\Banner\Position;
 use Eclipse\Cms\Policies\BannerPositionPolicy;
+use Eclipse\Cms\Models\Menu;
+use Eclipse\Cms\Policies\MenuPolicy;
 use Eclipse\Common\Foundation\Providers\PackageServiceProvider;
 use Eclipse\Common\Package;
 use Illuminate\Support\Facades\Gate;
@@ -25,5 +27,6 @@ class CmsServiceProvider extends PackageServiceProvider
     public function bootingPackage(): void
     {
         Gate::policy(Position::class, BannerPositionPolicy::class);
+        Gate::policy(Menu::class, MenuPolicy::class);
     }
 }

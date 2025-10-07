@@ -46,6 +46,8 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make(),
+                SpatieLaravelTranslatablePlugin::make()
+                    ->defaultLocales(['en', 'sl']),
                 CmsPlugin::make(),
                 SpatieLaravelTranslatablePlugin::make()
                     ->defaultLocales(['en', 'sl']),
