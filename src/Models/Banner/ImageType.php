@@ -2,8 +2,11 @@
 
 namespace Eclipse\Cms\Models\Banner;
 
+use Eclipse\Cms\Factories\BannerImageTypeFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Translatable\HasTranslations;
 
 /**
  * Type of banner image
@@ -18,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ImageType extends Model
 {
+    use HasFactory, HasTranslations;
+
     public $timestamps = false;
 
     protected $table = 'cms_banner_image_types';
@@ -31,6 +36,10 @@ class ImageType extends Model
         'is_hidpi',
     ];
 
+    public array $translatable = [
+        'name',
+    ];
+
     public function position(): BelongsTo
     {
         return $this->belongsTo(Position::class, 'position_id');
@@ -41,5 +50,10 @@ class ImageType extends Model
         return [
             'is_hidpi' => 'boolean',
         ];
+    }
+
+    protected static function newFactory(): BannerImageTypeFactory
+    {
+        return BannerImageTypeFactory::new();
     }
 }

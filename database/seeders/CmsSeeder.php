@@ -12,5 +12,8 @@ class CmsSeeder extends Seeder
         Section::factory()
             ->count(3)
             ->create();
+
+        $this
+            ->call(BannerSeeder::class);
     }
 }
