@@ -2,8 +2,12 @@
 
 namespace Eclipse\Cms;
 
+use Eclipse\Cms\Models\Banner\Position;
+use Eclipse\Cms\Models\Menu;
 use Eclipse\Cms\Models\Page;
 use Eclipse\Cms\Models\Section;
+use Eclipse\Cms\Policies\BannerPositionPolicy;
+use Eclipse\Cms\Policies\MenuPolicy;
 use Eclipse\Cms\Policies\PagePolicy;
 use Eclipse\Cms\Policies\SectionPolicy;
 use Eclipse\Common\Foundation\Providers\PackageServiceProvider;
@@ -29,5 +33,7 @@ class CmsServiceProvider extends PackageServiceProvider
         // Register policies
         Gate::policy(Section::class, SectionPolicy::class);
         Gate::policy(Page::class, PagePolicy::class);
+        Gate::policy(Position::class, BannerPositionPolicy::class);
+        Gate::policy(Menu::class, MenuPolicy::class);
     }
 }

@@ -39,6 +39,10 @@ class CmsSeeder extends Seeder
                 ->forSection($section)
                 ->create();
         });
+
+        $this
+            ->call(BannerSeeder::class)
+            ->call(MenuSeeder::class);
     }
 
     protected function seedWithoutTenancy(): void
@@ -53,5 +57,9 @@ class CmsSeeder extends Seeder
                 ->forSection($section)
                 ->create();
         });
+
+        $this
+            ->call(BannerSeeder::class)
+            ->call(MenuSeeder::class);
     }
 }
