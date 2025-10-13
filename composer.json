@@ -41,7 +41,7 @@
         }
     },
     "require": {
-        "php": "^8.3",
+        "php": "^8.2",
         "bezhansalleh/filament-shield": "^4.0",
         "datalinx/php-utils": "^2.5",
         "eclipsephp/common": "dev-main",

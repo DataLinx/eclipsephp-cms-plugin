@@ -2,9 +2,11 @@
 name: eclipsephp-cms
 services:
   appserver:
-    type: php:8.3
+    type: php:custom
     xdebug: "debug,develop,coverage"
     via: cli
+    overrides:
+      image: slimdeluxe/php:8.2-v1.2
 tooling:
   php:
     service: appserver
