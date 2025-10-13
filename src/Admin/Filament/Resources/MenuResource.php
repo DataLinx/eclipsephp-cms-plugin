@@ -6,16 +6,17 @@ use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Eclipse\Cms\Admin\Filament\Resources\MenuResource\Pages;
 use Eclipse\Cms\Admin\Filament\Resources\MenuResource\RelationManagers;
 use Eclipse\Cms\Models\Menu;
+use Filament\Actions;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Infolists;
-use Filament\Infolists\Infolist;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 
 class MenuResource extends Resource implements HasShieldPermissions
 {
@@ -23,17 +24,18 @@ class MenuResource extends Resource implements HasShieldPermissions
 
     protected static ?string $model = Menu::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-bars-3';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-bars-3';
 
-    protected static ?string $navigationGroup = 'CMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'CMS';
 
     protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make()
+        return $schema
+            ->components([
+                Section::make()
+                    ->columnSpanFull()
                     ->compact()
                     ->columns(2)
                     ->schema([
@@ -50,11 +52,11 @@ class MenuResource extends Resource implements HasShieldPermissions
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
-            ->schema([
-                Infolists\Components\Section::make('Information')
+        return $schema
+            ->components([
+                Section::make('Information')
                     ->compact()
                     ->schema([
                         Infolists\Components\TextEntry::make('title')
@@ -72,7 +74,7 @@ class MenuResource extends Resource implements HasShieldPermissions
                     ])
                     ->columns(3),
 
-                Infolists\Components\Section::make('Timestamps')
+                Section::make('Timestamps')
                     ->compact()
                     ->schema([
                         Infolists\Components\TextEntry::make('created_at')
@@ -117,15 +119,15 @@ class MenuResource extends Resource implements HasShieldPermissions
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                Actions\EditAction::make(),
+                Actions\DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
+            ->toolbarActions([
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
+                    Actions\ForceDeleteBulkAction::make(),
+                    Actions\RestoreBulkAction::make(),
                 ]),
             ]);
     }

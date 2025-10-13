@@ -5,10 +5,11 @@ namespace Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages;
 use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
+use LaraZeus\SpatieTranslatable\Resources\Pages\ViewRecord\Concerns\Translatable;
 
 class ViewBannerPosition extends ViewRecord
 {
-    use ViewRecord\Concerns\Translatable;
+    use Translatable;
 
     protected static ?string $breadcrumb = 'Manage Banners';
 

@@ -23,6 +23,7 @@ uses(TestCase::class)
             '--all' => null,
             '--panel' => 'admin',
             '--option' => 'permissions',
+            '--minimal' => null,
         ]);
     })
     ->in(__DIR__);

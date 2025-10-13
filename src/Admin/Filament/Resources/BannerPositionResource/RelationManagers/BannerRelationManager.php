@@ -6,18 +6,19 @@ use Eclipse\Cms\Models\Banner;
 use Eclipse\Cms\Rules\BannerImageDimensionRule;
 use Eclipse\Common\Filament\Tables\Columns\ImageColumn;
 use Eclipse\Common\Helpers\MediaHelper;
+use Filament\Actions;
 use Filament\Forms;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Infolists;
-use Filament\Infolists\Infolist;
-use Filament\Resources\RelationManagers\Concerns\Translatable;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use LaraZeus\SpatieTranslatable\Resources\RelationManagers\Concerns\Translatable;
 
 class BannerRelationManager extends RelationManager
 {
@@ -49,11 +50,10 @@ class BannerRelationManager extends RelationManager
                     $locale = $this->activeLocale ?? app()->getLocale();
                     $image = $record->images->where('type_id', $imageType->id)->first();
 
-                    if ($image && $image->getTranslation('file', $locale)) {
+                    if ($image?->getTranslation('file', $locale)) {
                         return $image->getTranslation('file', $locale);
                     }
 
-                    // Fallback for test environment when MediaHelper is not autoloaded
                     if (class_exists(MediaHelper::class)) {
                         return MediaHelper::getPlaceholderImageUrl(
                             'Not Found',
@@ -74,12 +74,12 @@ class BannerRelationManager extends RelationManager
         })->toArray();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make()
-                    ->compact()
+        return $schema
+            ->components([
+                Grid::make()
+                    ->columnSpanFull()
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->required()
@@ -106,7 +106,7 @@ class BannerRelationManager extends RelationManager
                         Forms\Components\Hidden::make('is_hidpi'),
                         Forms\Components\Hidden::make('image_width'),
                         Forms\Components\Hidden::make('image_height'),
-                        FileUpload::make('file')
+                        Forms\Components\FileUpload::make('file')
                             ->hiddenLabel()
                             ->image()
                             ->directory('banners')
@@ -213,10 +213,10 @@ class BannerRelationManager extends RelationManager
             ]);
     }
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist
-            ->schema([
+        return $schema
+            ->components([
                 Infolists\Components\TextEntry::make('name'),
 
                 Infolists\Components\TextEntry::make('link')
@@ -230,7 +230,7 @@ class BannerRelationManager extends RelationManager
                     ->boolean()
                     ->label('Open in new tab'),
 
-                Infolists\Components\Grid::make()
+                Grid::make()
                     ->columnSpanFull()
                     ->schema(
                         fn (Banner $record) => $this->getOwnerRecord()->imageTypes()->get()
@@ -238,7 +238,6 @@ class BannerRelationManager extends RelationManager
                                 $locale = app()->getLocale();
                                 $image = $record->images->where('type_id', $imageType->id)->first();
 
-                                // Only show image entry if there's an actual image
                                 if (! $image || ! $image->getTranslation('file', $locale)) {
                                     return null;
                                 }
@@ -250,7 +249,7 @@ class BannerRelationManager extends RelationManager
                                     ->height('auto')
                                     ->getStateUsing(fn () => $image->getTranslation('file', $locale));
                             })
-                            ->filter() // Remove null entries
+                            ->filter()
                             ->toArray()
                     ),
             ]);
@@ -306,8 +305,8 @@ class BannerRelationManager extends RelationManager
             ])
             ->reorderable('sort')
             ->headerActions([
-                Tables\Actions\LocaleSwitcher::make(),
-                Tables\Actions\CreateAction::make()
+                LocaleSwitcher::make(),
+                Actions\CreateAction::make()
                     ->icon('heroicon-o-plus-circle')
                     ->label('Add banner')
                     ->mutateFormDataUsing(function (array $data): array {
@@ -319,13 +318,13 @@ class BannerRelationManager extends RelationManager
                     }),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Actions\ViewAction::make(),
+                Actions\EditAction::make(),
+                Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
                 ]),
             ])
             ->modifyQueryUsing(

@@ -6,14 +6,7 @@ use Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages\CreatePage;
 use Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages\EditPage;
 use Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages\ListPages;
 use Eclipse\Cms\Models\Page;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreAction;
-use Filament\Actions\RestoreBulkAction;
+use Filament\Actions;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
@@ -93,16 +86,16 @@ class PageResource extends Resource
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
-                ForceDeleteAction::make(),
+                Actions\EditAction::make(),
+                Actions\DeleteAction::make(),
+                Actions\RestoreAction::make(),
+                Actions\ForceDeleteAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
+                    Actions\RestoreBulkAction::make(),
+                    Actions\ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }

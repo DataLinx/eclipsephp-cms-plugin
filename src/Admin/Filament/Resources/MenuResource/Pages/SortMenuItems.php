@@ -4,28 +4,25 @@ namespace Eclipse\Cms\Admin\Filament\Resources\MenuResource\Pages;
 
 use Eclipse\Cms\Admin\Filament\Resources\MenuResource;
 use Eclipse\Cms\Enums\MenuItemType;
+use Eclipse\Cms\Models\Menu;
 use Eclipse\Cms\Models\Menu\Item;
-use Filament\Actions;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Resources\Pages\Concerns\InteractsWithRecord;
-use Filament\Resources\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use SolutionForest\FilamentTree\Components\Tree;
-use SolutionForest\FilamentTree\Concern\InteractWithTree;
-use SolutionForest\FilamentTree\Contract\HasTree;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use SolutionForest\FilamentTree\Concern\TreeRecords\Translatable;
+use SolutionForest\FilamentTree\Resources\Pages\TreePage as BasePage;
 
-class SortMenuItems extends Page implements HasTree
+class SortMenuItems extends BasePage
 {
-    use InteractsWithRecord, InteractWithTree, Translatable;
+    use Translatable;
 
     protected static string $resource = MenuResource::class;
 
-    protected static string $view = 'filament-tree::pages.tree';
+    protected static int $maxDepth = 5;
 
-    public function mount(int|string $record): void
+    protected function getMenu(): Menu
     {
-        $this->record = $this->resolveRecord($record);
+        return Menu::findOrFail(request()->route('record'));
     }
 
     public function getTitle(): string
@@ -35,49 +32,26 @@ class SortMenuItems extends Page implements HasTree
 
     public function getSubheading(): ?string
     {
-        return "Drag and drop to reorder menu items for: {$this->record->title}";
+        return "Drag and drop to reorder menu items for: {$this->getMenu()->title}";
     }
 
     protected function getTreeQuery(): Builder
     {
-        return Item::query()->where('menu_id', $this->record->id);
+        return Item::query()
+            ->with('children')
+            ->where('menu_id', $this->getMenu()->id);
     }
 
-    public function getBreadcrumbs(): array
+    public function getTreeRecordTitle(?Model $record = null): string
     {
-        $resource = static::getResource();
-
-        $breadcrumbs = [
-            $resource::getUrl() => $resource::getBreadcrumb(),
-            $resource::getUrl('edit', [
-                'record' => $this->record->id,
-            ]) => "Edit {$this->record->title}",
-            ...(filled($breadcrumb = $this->getBreadcrumb()) ? [$breadcrumb] : []),
-        ];
-
-        if (filled($cluster = static::getCluster())) {
-            return $cluster::unshiftClusterBreadcrumbs($breadcrumbs);
+        if (! $record) {
+            return '';
         }
 
-        return $breadcrumbs;
+        return $record->label;
     }
 
-    public function getModel(): string
-    {
-        return Item::class;
-    }
-
-    public function getMaxDepth(): int
-    {
-        return 5;
-    }
-
-    public static function tree(Tree $tree): Tree
-    {
-        return $tree;
-    }
-
-    protected function getTreeRecordIcon(?Model $record = null): ?string
+    public function getTreeRecordIcon(?Model $record = null): ?string
     {
         if (! $record) {
             return 'heroicon-o-bars-3';
@@ -94,7 +68,22 @@ class SortMenuItems extends Page implements HasTree
     protected function getActions(): array
     {
         return [
-            Actions\LocaleSwitcher::make(),
+            LocaleSwitcher::make(),
         ];
+    }
+
+    protected function hasDeleteAction(): bool
+    {
+        return false;
+    }
+
+    protected function hasEditAction(): bool
+    {
+        return false;
+    }
+
+    protected function hasViewAction(): bool
+    {
+        return false;
     }
 }
