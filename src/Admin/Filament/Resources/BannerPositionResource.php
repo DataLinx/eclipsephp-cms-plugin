@@ -34,6 +34,7 @@ class BannerPositionResource extends Resource implements HasShieldPermissions
     {
         return [
             'view_any',
+            'view',
             'create',
             'update',
             'delete',

@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
 
 /*
@@ -17,15 +16,6 @@ use Tests\TestCase;
 
 uses(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->beforeEach(function () {
-        // Seed roles and permissions with Filament Shield plugin
-        Artisan::call('shield:generate', [
-            '--all' => null,
-            '--panel' => 'admin',
-            '--option' => 'permissions',
-            '--minimal' => null,
-        ]);
-    })
     ->in(__DIR__);
 
 /*
@@ -53,8 +43,3 @@ uses(TestCase::class)
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
-
-function something()
-{
-    // ..
-}
