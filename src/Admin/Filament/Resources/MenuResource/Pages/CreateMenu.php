@@ -3,20 +3,21 @@
 namespace Eclipse\Cms\Admin\Filament\Resources\MenuResource\Pages;
 
 use Eclipse\Cms\Admin\Filament\Resources\MenuResource;
-use Filament\Actions;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\CreateRecord;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use LaraZeus\SpatieTranslatable\Resources\Pages\CreateRecord\Concerns\Translatable;
 
 class CreateMenu extends CreateRecord
 {
-    use CreateRecord\Concerns\Translatable;
+    use Translatable;
 
     protected static string $resource = MenuResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-            Actions\LocaleSwitcher::make(),
+            LocaleSwitcher::make(),
         ];
     }
 

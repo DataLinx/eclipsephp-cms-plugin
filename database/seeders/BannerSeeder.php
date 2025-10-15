@@ -58,7 +58,7 @@ class BannerSeeder extends Seeder
 
             $banner->images()->create([
                 'type_id' => $type->id,
-                'file' => $hidpiFilename,
+                'file' => ['en' => $hidpiFilename, 'sl' => $hidpiFilename],
                 'image_width' => $hidpiWidth,
                 'image_height' => $hidpiHeight,
                 'is_hidpi' => true,
@@ -74,7 +74,7 @@ class BannerSeeder extends Seeder
 
             $banner->images()->create([
                 'type_id' => $type->id,
-                'file' => $regularFilename,
+                'file' => ['en' => $regularFilename, 'sl' => $regularFilename],
                 'image_width' => $type->image_width,
                 'image_height' => $type->image_height,
                 'is_hidpi' => false,

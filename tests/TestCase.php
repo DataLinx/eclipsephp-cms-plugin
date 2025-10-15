@@ -2,11 +2,13 @@
 
 namespace Tests;
 
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Workbench\App\Models\User;
 
 abstract class TestCase extends BaseTestCase
@@ -19,7 +21,6 @@ abstract class TestCase extends BaseTestCase
 
     protected function setUp(): void
     {
-        // Always show errors when testing
         ini_set('display_errors', 1);
         error_reporting(E_ALL);
 
@@ -32,6 +33,11 @@ abstract class TestCase extends BaseTestCase
         config(['eclipse-cms.tenancy.foreign_key' => 'site_id']);
 
         config(['scout.driver' => null]);
+    }
+
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set('app.key', 'base64:0qAvnB4fU0hiVsd01U1b/GljkPRLBS50IQ7I4DS7fxI=');
     }
 
     /**
@@ -50,11 +56,51 @@ abstract class TestCase extends BaseTestCase
     protected function setUpSuperAdmin(): self
     {
         $this->migrate();
-        $this->superAdmin = User::factory()->make();
-        $this->superAdmin->assignRole('super_admin')->save();
-        $this->actingAs($this->superAdmin);
+        $this->superAdmin = User::factory()->create();
+
+        $this->createAllPermissions();
+
+        $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $role->syncPermissions(Permission::all());
+
+        $this->superAdmin->assignRole('super_admin');
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($this->superAdmin, 'web');
 
         return $this;
+    }
+
+    protected function createAllPermissions(): void
+    {
+        $permissions = [
+            'view_any_menu',
+            'view_menu',
+            'create_menu',
+            'update_menu',
+            'delete_menu',
+            'delete_any_menu',
+            'force_delete_menu',
+            'force_delete_any_menu',
+            'restore_menu',
+            'restore_any_menu',
+            'view_any_position',
+            'view_position',
+            'create_position',
+            'update_position',
+            'delete_position',
+            'delete_any_position',
+            'force_delete_position',
+            'force_delete_any_position',
+            'restore_position',
+            'restore_any_position',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
     }
 
     /**

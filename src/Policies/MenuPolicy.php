@@ -15,6 +15,11 @@ class MenuPolicy
         return $user->can('view_any_menu');
     }
 
+    public function view(Authorizable $user, Menu $menu): bool
+    {
+        return $user->can('view_menu');
+    }
+
     public function create(Authorizable $user): bool
     {
         return $user->can('create_menu');

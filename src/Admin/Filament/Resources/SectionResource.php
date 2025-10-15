@@ -6,14 +6,7 @@ use Eclipse\Cms\Admin\Filament\Resources\SectionResource\Pages\CreateSection;
 use Eclipse\Cms\Admin\Filament\Resources\SectionResource\Pages\EditSection;
 use Eclipse\Cms\Admin\Filament\Resources\SectionResource\Pages\ListSections;
 use Eclipse\Cms\Models\Section;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreAction;
-use Filament\Actions\RestoreBulkAction;
+use Filament\Actions;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -58,16 +51,16 @@ class SectionResource extends Resource
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
-                ForceDeleteAction::make(),
+                Actions\EditAction::make(),
+                Actions\DeleteAction::make(),
+                Actions\RestoreAction::make(),
+                Actions\ForceDeleteAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
+                    Actions\RestoreBulkAction::make(),
+                    Actions\ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }

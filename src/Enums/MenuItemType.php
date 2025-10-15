@@ -4,11 +4,11 @@ namespace Eclipse\Cms\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum MenuItemType implements HasLabel
+enum MenuItemType: string implements HasLabel
 {
-    case Linkable;
-    case CustomUrl;
-    case Group;
+    case Linkable = 'Linkable';
+    case CustomUrl = 'CustomUrl';
+    case Group = 'Group';
 
     public function getLabel(): ?string
     {

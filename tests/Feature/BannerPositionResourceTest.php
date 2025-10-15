@@ -11,16 +11,15 @@ use Illuminate\Support\Facades\Storage;
 
 use function Pest\Livewire\livewire;
 
-beforeEach(function () {
-    $this->setUpSuperAdmin();
-});
-
 it('can render position index page', function () {
+    $this->setUpUserWithPermissions(['view_any_position']);
+
     $this->get(BannerPositionResource::getUrl('index'))
         ->assertSuccessful();
 });
 
 it('can list positions', function () {
+    $this->setUpUserWithPermissions(['view_any_position']);
     $positions = Position::factory()->count(3)->create();
 
     livewire(ListBannerPositions::class)
@@ -28,11 +27,14 @@ it('can list positions', function () {
 });
 
 it('can render position create page', function () {
+    $this->setUpUserWithPermissions(['view_any_position', 'create_position']);
+
     $this->get(BannerPositionResource::getUrl('create'))
         ->assertSuccessful();
 });
 
 it('can create position', function () {
+    $this->setUpUserWithPermissions(['view_any_position', 'create_position']);
     $newData = Position::factory()->make();
 
     livewire(CreateBannerPosition::class)
@@ -54,6 +56,7 @@ it('can create position', function () {
 });
 
 it('can create position without image types', function () {
+    $this->setUpUserWithPermissions(['view_any_position', 'create_position']);
     $newData = Position::factory()->make([
         'name' => 'Header Banner',
         'code' => 'header',
@@ -74,6 +77,7 @@ it('can create position without image types', function () {
 });
 
 it('can render position edit page', function () {
+    $this->setUpUserWithPermissions(['view_any_position', 'view_position', 'update_position']);
     $position = Position::factory()->create();
 
     $this->get(BannerPositionResource::getUrl('edit', ['record' => $position]))
@@ -81,6 +85,7 @@ it('can render position edit page', function () {
 });
 
 it('can retrieve position data for editing', function () {
+    $this->setUpUserWithPermissions(['view_any_position', 'view_position', 'update_position']);
     $position = Position::factory()->create();
 
     livewire(EditBannerPosition::class, [
@@ -93,6 +98,7 @@ it('can retrieve position data for editing', function () {
 });
 
 it('can save position', function () {
+    $this->setUpUserWithPermissions(['view_any_position', 'view_position', 'update_position']);
     $position = Position::factory()->create();
     $newData = Position::factory()->make();
 
@@ -112,6 +118,7 @@ it('can save position', function () {
 });
 
 it('can delete position', function () {
+    $this->setUpUserWithPermissions(['view_any_position', 'delete_position']);
     $position = Position::factory()->create();
 
     livewire(ListBannerPositions::class)
@@ -121,6 +128,8 @@ it('can delete position', function () {
 });
 
 it('can validate position creation', function () {
+    $this->setUpUserWithPermissions(['view_any_position', 'create_position']);
+
     livewire(CreateBannerPosition::class)
         ->fillForm([
             'name' => null,
@@ -130,6 +139,7 @@ it('can validate position creation', function () {
 });
 
 it('can filter positions', function () {
+    $this->setUpUserWithPermissions(['view_any_position']);
     $positions = Position::factory()->count(5)->create();
 
     livewire(ListBannerPositions::class)
@@ -138,6 +148,7 @@ it('can filter positions', function () {
 });
 
 it('can render position view page', function () {
+    $this->setUpUserWithPermissions(['view_any_position', 'view_position']);
     $position = Position::factory()->create();
 
     $this->get(BannerPositionResource::getUrl('view', ['record' => $position]))
@@ -145,6 +156,7 @@ it('can render position view page', function () {
 });
 
 it('can view position and manage banners', function () {
+    $this->setUpUserWithPermissions(['view_any_position', 'view_position']);
     $position = Position::factory()->create();
 
     livewire(ViewBannerPosition::class, [
@@ -154,7 +166,7 @@ it('can view position and manage banners', function () {
 });
 
 it('can access edit from view page', function () {
-    $this->setUpSuperAdmin();
+    $this->setUpUserWithPermissions(['view_any_position', 'view_position', 'update_position']);
 
     $position = Position::factory()->create();
 
@@ -169,6 +181,7 @@ it('can access edit from view page', function () {
 });
 
 it('deletes all related banners and image files when position is deleted', function () {
+    $this->setUpUserWithPermissions(['delete_position']);
     Storage::fake();
 
     Storage::put('banners/banner1-desktop.png', 'fake-image-content');
@@ -215,4 +228,21 @@ it('deletes all related banners and image files when position is deleted', funct
     expect(Storage::exists('banners/banner1-desktop.png'))->toBeFalse();
     expect(Storage::exists('banners/banner1-mobile@2x.png'))->toBeFalse();
     expect(Storage::exists('banners/banner1-mobile@2x_1x.png'))->toBeFalse();
+});
+
+test('super admin bypasses all position authorization checks', function () {
+    $this->setUpSuperAdmin();
+    $position = Position::factory()->create();
+
+    $this->get(BannerPositionResource::getUrl('index'))->assertSuccessful();
+    $this->get(BannerPositionResource::getUrl('create'))->assertSuccessful();
+    $this->get(BannerPositionResource::getUrl('edit', ['record' => $position]))->assertSuccessful();
+    $this->get(BannerPositionResource::getUrl('view', ['record' => $position]))->assertSuccessful();
+
+    livewire(CreateBannerPosition::class)->assertSuccessful();
+    livewire(EditBannerPosition::class, ['record' => $position->getRouteKey()])->assertSuccessful();
+    livewire(ViewBannerPosition::class, ['record' => $position->getRouteKey()])->assertSuccessful();
+    livewire(ListBannerPositions::class)->callTableAction('delete', $position);
+
+    $this->assertSoftDeleted($position);
 });
