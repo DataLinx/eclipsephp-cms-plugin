@@ -21,9 +21,6 @@ abstract class TestCase extends BaseTestCase
 
     protected function setUp(): void
     {
-        ini_set('display_errors', 1);
-        error_reporting(E_ALL);
-
         parent::setUp();
 
         $this->withoutVite();
@@ -35,14 +32,6 @@ abstract class TestCase extends BaseTestCase
         config(['scout.driver' => null]);
     }
 
-    protected function defineEnvironment($app): void
-    {
-        $app['config']->set('app.key', 'base64:0qAvnB4fU0hiVsd01U1b/GljkPRLBS50IQ7I4DS7fxI=');
-    }
-
-    /**
-     * Run database migrations
-     */
     protected function migrate(): self
     {
         $this->artisan('migrate');
@@ -50,9 +39,6 @@ abstract class TestCase extends BaseTestCase
         return $this;
     }
 
-    /**
-     * Set up default "super admin" user
-     */
     protected function setUpSuperAdmin(): self
     {
         $this->migrate();
@@ -75,37 +61,30 @@ abstract class TestCase extends BaseTestCase
 
     protected function createAllPermissions(): void
     {
-        $permissions = [
-            'view_any_menu',
-            'view_menu',
-            'create_menu',
-            'update_menu',
-            'delete_menu',
-            'delete_any_menu',
-            'force_delete_menu',
-            'force_delete_any_menu',
-            'restore_menu',
-            'restore_any_menu',
-            'view_any_position',
-            'view_position',
-            'create_position',
-            'update_position',
-            'delete_position',
-            'delete_any_position',
-            'force_delete_position',
-            'force_delete_any_position',
-            'restore_position',
-            'restore_any_position',
+        $resources = ['section', 'page', 'menu', 'position'];
+        $prefixes = [
+            'view_any',
+            'view',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+            'restore',
+            'restore_any',
         ];
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        foreach ($resources as $resource) {
+            foreach ($prefixes as $prefix) {
+                Permission::firstOrCreate([
+                    'name' => "{$prefix}_{$resource}",
+                    'guard_name' => 'web',
+                ]);
+            }
         }
     }
 
-    /**
-     * Set up a common user with no roles or permissions
-     */
     protected function setUpCommonUser(): self
     {
         $this->migrate();
