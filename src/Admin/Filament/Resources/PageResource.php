@@ -3,26 +3,21 @@
 namespace Eclipse\Cms\Admin\Filament\Resources;
 
 use Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages;
+use Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages\CreatePage;
+use Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages\EditPage;
+use Eclipse\Cms\Admin\Filament\Resources\PageResource\Pages\ListPages;
 use Eclipse\Cms\Enums\PageStatus;
 use Eclipse\Cms\Models\Page;
+use Filament\Actions;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\Section as FormSection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ForceDeleteAction;
-use Filament\Tables\Actions\ForceDeleteBulkAction;
-use Filament\Tables\Actions\RestoreAction;
-use Filament\Tables\Actions\RestoreBulkAction;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -30,6 +25,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 
 class PageResource extends Resource
 {
@@ -39,19 +35,20 @@ class PageResource extends Resource
 
     protected static ?string $slug = 'cms/pages';
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?string $navigationGroup = 'CMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'CMS';
 
     protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $navigationLabel = 'Pages';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                FormSection::make('Basic Information')
+        return $schema
+            ->components([
+                Section::make('Basic Information')
+                    ->columnSpanFull()
                     ->schema([
                         TextInput::make('title')
                             ->label('Page Title')
@@ -102,7 +99,8 @@ class PageResource extends Resource
                     ->columns(3)
                     ->compact(),
 
-                FormSection::make('Content')
+                Section::make('Content')
+                    ->columnSpanFull()
                     ->schema([
                         Textarea::make('short_text')
                             ->label('Short Description')
@@ -129,7 +127,8 @@ class PageResource extends Resource
                     ])
                     ->compact(),
 
-                FormSection::make('Information')
+                Section::make('Information')
+                    ->columnSpanFull()
                     ->schema([
                         Placeholder::make('created_at')
                             ->label('Created')
@@ -224,17 +223,17 @@ class PageResource extends Resource
 
                 TrashedFilter::make(),
             ])
-            ->actions([
-                EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
-                ForceDeleteAction::make(),
+            ->recordActions([
+                Actions\EditAction::make(),
+                Actions\DeleteAction::make(),
+                Actions\RestoreAction::make(),
+                Actions\ForceDeleteAction::make(),
             ])
-            ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+            ->toolbarActions([
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
+                    Actions\RestoreBulkAction::make(),
+                    Actions\ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -242,9 +241,9 @@ class PageResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPages::route('/'),
-            'create' => Pages\CreatePage::route('/create'),
-            'edit' => Pages\EditPage::route('/{record}/edit'),
+            'index' => ListPages::route('/'),
+            'create' => CreatePage::route('/create'),
+            'edit' => EditPage::route('/{record}/edit'),
         ];
     }
 

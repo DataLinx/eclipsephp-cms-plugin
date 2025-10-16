@@ -2,11 +2,13 @@
 
 namespace Tests;
 
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Workbench\App\Models\User;
 
 abstract class TestCase extends BaseTestCase
@@ -40,11 +42,47 @@ abstract class TestCase extends BaseTestCase
     protected function setUpSuperAdmin(): self
     {
         $this->migrate();
-        $this->superAdmin = User::factory()->make();
-        $this->superAdmin->assignRole('super_admin')->save();
-        $this->actingAs($this->superAdmin);
+        $this->superAdmin = User::factory()->create();
+
+        $this->createAllPermissions();
+
+        $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $role->syncPermissions(Permission::all());
+
+        $this->superAdmin->assignRole('super_admin');
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($this->superAdmin, 'web');
 
         return $this;
+    }
+
+    protected function createAllPermissions(): void
+    {
+        $resources = ['section', 'page', 'menu', 'position'];
+        $prefixes = [
+            'view_any',
+            'view',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+            'restore',
+            'restore_any',
+        ];
+
+        foreach ($resources as $resource) {
+            foreach ($prefixes as $prefix) {
+                Permission::firstOrCreate([
+                    'name' => "{$prefix}_{$resource}",
+                    'guard_name' => 'web',
+                ]);
+            }
+        }
     }
 
     protected function setUpCommonUser(): self

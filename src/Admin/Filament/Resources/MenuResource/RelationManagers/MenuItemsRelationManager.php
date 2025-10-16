@@ -7,23 +7,22 @@ use Eclipse\Cms\Enums\MenuItemType;
 use Eclipse\Cms\Models\Menu\Item;
 use Eclipse\Common\Foundation\Models\Scopes\ActiveScope;
 use Eclipse\Common\Foundation\Plugins\HasLinkables;
+use Filament\Actions;
 use Filament\Facades\Filament;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
-use Filament\Resources\RelationManagers\Concerns\Translatable;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\HtmlString;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use LaraZeus\SpatieTranslatable\Resources\RelationManagers\Concerns\Translatable;
 
 class MenuItemsRelationManager extends RelationManager
 {
@@ -82,26 +81,26 @@ class MenuItemsRelationManager extends RelationManager
                 ->searchable()
                 ->preload()
                 ->required()
-                ->visible(fn (Get $get) => $get('type') === 'Linkable'),
+                ->visible(fn (Get $get) => $get('type') === MenuItemType::Linkable),
             Forms\Components\TextInput::make('custom_url')
                 ->columnSpanFull()
                 ->label('Custom URL')
                 ->required()
-                ->visible(fn (Get $get) => $get('type') === 'CustomUrl'),
+                ->visible(fn (Get $get) => $get('type') === MenuItemType::CustomUrl),
             Forms\Components\Toggle::make('new_tab')
                 ->columnSpanFull()
                 ->label('Open in new tab')
                 ->default(false)
-                ->visible(fn (Get $get) => in_array($get('type'), ['Linkable', 'CustomUrl'])),
+                ->visible(fn (Get $get) => in_array($get('type'), [MenuItemType::Linkable, MenuItemType::CustomUrl])),
             Forms\Components\Toggle::make('is_active')
                 ->columnSpanFull()
                 ->default(true),
         ];
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form->schema($this->getMenuItemFormSchema());
+        return $schema->components($this->getMenuItemFormSchema());
     }
 
     public function table(Table $table): Table
@@ -127,7 +126,7 @@ class MenuItemsRelationManager extends RelationManager
                     ->sortable(false),
             ])
             ->filters([
-                TernaryFilter::make('is_active')
+                Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Status')
                     ->placeholder('Active only')
                     ->trueLabel('All')
@@ -150,34 +149,35 @@ class MenuItemsRelationManager extends RelationManager
                         return [];
                     }),
 
-                TrashedFilter::make(),
+                Tables\Filters\TrashedFilter::make(),
 
-                SelectFilter::make('type')
+                Tables\Filters\SelectFilter::make('type')
                     ->options(MenuItemType::class)
                     ->multiple(),
-                SelectFilter::make('parent_id')
+                Tables\Filters\SelectFilter::make('parent_id')
                     ->label('Parent Item')
                     ->options(fn () => Item::getParentOptions($this->getOwnerRecord()->id))
                     ->searchable(),
-                TernaryFilter::make('new_tab')
+                Tables\Filters\TernaryFilter::make('new_tab')
                     ->label('Opens in New Tab'),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                LocaleSwitcher::make(),
+                Actions\CreateAction::make()
                     ->label('New Menu Item')
                     ->icon('heroicon-o-plus-circle'),
-                Tables\Actions\Action::make('sort')
+                Actions\Action::make('sort')
                     ->label('Sort Items')
                     ->icon('heroicon-o-arrows-up-down')
                     ->url(fn () => MenuResource::getUrl('sort-items', ['record' => $this->getOwnerRecord()]))
                     ->color('gray'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
-                Tables\Actions\Action::make('addSubitem')
+                Actions\EditAction::make(),
+                Actions\DeleteAction::make(),
+                Actions\RestoreAction::make(),
+                Actions\ForceDeleteAction::make(),
+                Actions\Action::make('addSubitem')
                     ->icon('heroicon-o-plus-circle')
                     ->color('warning')
                     ->label('Add Sub-item')
@@ -194,8 +194,8 @@ class MenuItemsRelationManager extends RelationManager
                     }),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\BulkAction::make('activate')
+                Actions\BulkActionGroup::make([
+                    Actions\BulkAction::make('activate')
                         ->label('Activate')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
@@ -210,7 +210,7 @@ class MenuItemsRelationManager extends RelationManager
 
                             return blank($filterState['value']);
                         }),
-                    Tables\Actions\BulkAction::make('deactivate')
+                    Actions\BulkAction::make('deactivate')
                         ->label('Deactivate')
                         ->icon('heroicon-o-x-circle')
                         ->color('warning')
@@ -229,9 +229,9 @@ class MenuItemsRelationManager extends RelationManager
 
                             return filled($filterState['value']);
                         }),
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Actions\DeleteBulkAction::make(),
+                    Actions\RestoreBulkAction::make(),
+                    Actions\ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }
