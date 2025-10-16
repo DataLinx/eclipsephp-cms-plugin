@@ -35,8 +35,8 @@ it('belongs to a menu', function () {
 
 it('can have parent and children relationships', function () {
     $menu = Menu::factory()->create();
-    $parent = Item::factory()->create(['menu_id' => $menu->id]);
-    $child = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
+    $parent = Item::factory()->active()->create(['menu_id' => $menu->id]);
+    $child = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
 
     $childWithParent = Item::withoutGlobalScopes()->with('parent')->find($child->id);
     expect($childWithParent->parent)->toBeInstanceOf(Item::class)
