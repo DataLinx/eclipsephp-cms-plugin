@@ -8,16 +8,15 @@ use Eclipse\Cms\Models\Menu;
 
 use function Pest\Livewire\livewire;
 
-beforeEach(function () {
-    $this->setUpSuperAdmin();
-});
-
 it('can render menu index page', function () {
+    $this->setUpUserWithPermissions(['view_any_menu']);
+
     $this->get(MenuResource::getUrl('index'))
         ->assertSuccessful();
 });
 
 it('can list menus', function () {
+    $this->setUpUserWithPermissions(['view_any_menu']);
     $menus = Menu::factory()->count(10)->create();
 
     livewire(ListMenus::class)
@@ -25,11 +24,14 @@ it('can list menus', function () {
 });
 
 it('can render menu create page', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'create_menu']);
+
     $this->get(MenuResource::getUrl('create'))
         ->assertSuccessful();
 });
 
 it('can create menu', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'create_menu']);
     $newData = Menu::factory()->make();
 
     livewire(CreateMenu::class)
@@ -52,6 +54,8 @@ it('can create menu', function () {
 });
 
 it('can validate menu creation', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'create_menu']);
+
     livewire(CreateMenu::class)
         ->fillForm([
             'title' => null,
@@ -61,6 +65,7 @@ it('can validate menu creation', function () {
 });
 
 it('can render menu edit page', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'view_menu', 'update_menu']);
     $menu = Menu::factory()->create();
 
     $this->get(MenuResource::getUrl('edit', ['record' => $menu]))
@@ -68,6 +73,7 @@ it('can render menu edit page', function () {
 });
 
 it('can retrieve menu data for editing', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'view_menu', 'update_menu']);
     $menu = Menu::factory()->create();
 
     livewire(EditMenu::class, [
@@ -81,6 +87,7 @@ it('can retrieve menu data for editing', function () {
 });
 
 it('can save menu', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'view_menu', 'update_menu']);
     $menu = Menu::factory()->create();
     $newData = Menu::factory()->make();
 
@@ -102,6 +109,7 @@ it('can save menu', function () {
 });
 
 it('can validate menu editing', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'view_menu', 'update_menu']);
     $menu = Menu::factory()->create();
 
     livewire(EditMenu::class, [
@@ -115,6 +123,7 @@ it('can validate menu editing', function () {
 });
 
 it('can delete menu', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'delete_menu']);
     $menu = Menu::factory()->create();
 
     livewire(ListMenus::class)
@@ -124,6 +133,7 @@ it('can delete menu', function () {
 });
 
 it('can bulk delete menus', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'delete_any_menu']);
     $menus = Menu::factory()->count(10)->create();
 
     livewire(ListMenus::class)
@@ -135,6 +145,7 @@ it('can bulk delete menus', function () {
 });
 
 it('can search menus', function () {
+    $this->setUpUserWithPermissions(['view_any_menu']);
     $menus = Menu::factory()->count(10)->create();
 
     $title = $menus->first()->title['en'] ?? $menus->first()->title;
@@ -146,6 +157,7 @@ it('can search menus', function () {
 });
 
 it('can sort menus', function () {
+    $this->setUpUserWithPermissions(['view_any_menu']);
     $menus = Menu::factory()->count(10)->create();
 
     livewire(ListMenus::class)
@@ -156,6 +168,7 @@ it('can sort menus', function () {
 });
 
 it('can filter menus by active status', function () {
+    $this->setUpUserWithPermissions(['view_any_menu']);
     $activeMenus = Menu::factory()->active()->count(5)->create();
     $inactiveMenus = Menu::factory()->inactive()->count(5)->create();
 
@@ -201,6 +214,7 @@ test('user with delete permission can delete menus', function () {
 });
 
 it('can render menu item sorting page', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'view_menu', 'update_menu']);
     $menu = Menu::factory()->create();
 
     $this->get(MenuResource::getUrl('sort-items', ['record' => $menu]))
@@ -208,6 +222,7 @@ it('can render menu item sorting page', function () {
 });
 
 it('can access menu item sorting page from relation manager', function () {
+    $this->setUpUserWithPermissions(['view_any_menu', 'view_menu', 'update_menu']);
     $menu = Menu::factory()->create();
 
     $response = $this->get(MenuResource::getUrl('edit', ['record' => $menu]));
@@ -221,6 +236,7 @@ it('can access menu item sorting page from relation manager', function () {
 });
 
 it('deletes all menu items when menu is soft deleted', function () {
+    $this->setUpUserWithPermissions(['delete_menu']);
     $menu = Menu::factory()->create();
     $rootItem = $menu->allItems()->create([
         'label' => ['en' => 'Root Item'],
@@ -255,6 +271,7 @@ it('deletes all menu items when menu is soft deleted', function () {
 });
 
 it('force deletes all menu items when menu is force deleted', function () {
+    $this->setUpUserWithPermissions(['force_delete_menu']);
     $menu = Menu::factory()->create();
     $rootItem = $menu->allItems()->create([
         'label' => ['en' => 'Root Item'],
@@ -289,6 +306,7 @@ it('force deletes all menu items when menu is force deleted', function () {
 });
 
 it('can restore menu', function () {
+    $this->setUpUserWithPermissions(['restore_menu']);
     $menu = Menu::factory()->create();
 
     $menu->delete();
@@ -299,6 +317,7 @@ it('can restore menu', function () {
 });
 
 it('can force delete menu and its items', function () {
+    $this->setUpUserWithPermissions(['delete_menu', 'force_delete_menu']);
     $menu = Menu::factory()->create();
     $item = $menu->allItems()->create([
         'label' => ['en' => 'Test Item'],
@@ -314,4 +333,19 @@ it('can force delete menu and its items', function () {
 
     $this->assertModelMissing($menu);
     $this->assertModelMissing($item);
+});
+
+test('super admin bypasses all menu authorization checks', function () {
+    $this->setUpSuperAdmin();
+    $menu = Menu::factory()->create();
+
+    $this->get(MenuResource::getUrl('index'))->assertSuccessful();
+    $this->get(MenuResource::getUrl('create'))->assertSuccessful();
+    $this->get(MenuResource::getUrl('edit', ['record' => $menu]))->assertSuccessful();
+
+    livewire(CreateMenu::class)->assertSuccessful();
+    livewire(EditMenu::class, ['record' => $menu->getRouteKey()])->assertSuccessful();
+    livewire(ListMenus::class)->callTableAction('delete', $menu);
+
+    $this->assertSoftDeleted($menu);
 });

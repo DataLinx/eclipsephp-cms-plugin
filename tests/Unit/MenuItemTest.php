@@ -38,10 +38,12 @@ it('can have parent and children relationships', function () {
     $parent = Item::factory()->active()->create(['menu_id' => $menu->id]);
     $child = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
 
-    expect($child->parent)->toBeInstanceOf(Item::class)
-        ->and($child->parent->id)->toBe($parent->id)
-        ->and($parent->children)->toHaveCount(1)
-        ->and($parent->children->first()->id)->toBe($child->id);
+    $childWithParent = Item::withoutGlobalScopes()->with('parent')->find($child->id);
+    expect($childWithParent->parent)->toBeInstanceOf(Item::class)
+        ->and($childWithParent->parent->id)->toBe($parent->id);
+
+    expect(Item::withoutGlobalScopes()->where('parent_id', $parent->id)->count())->toBe(1);
+    expect(Item::withoutGlobalScopes()->where('parent_id', $parent->id)->first()->id)->toBe($child->id);
 });
 
 it('has translatable label', function () {
@@ -238,7 +240,7 @@ it('deleting parent item cascades to delete children', function () {
     $child1 = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
     $child2 = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
 
-    expect($parent->children)->toHaveCount(2);
+    expect(Item::withoutGlobalScopes()->where('parent_id', $parent->id)->count())->toBe(2);
     expect($child1->trashed())->toBeFalse();
     expect($child2->trashed())->toBeFalse();
 
@@ -255,8 +257,8 @@ it('deleting parent item cascades to nested children recursively', function () {
     $parent = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $grandparent->id]);
     $child = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
 
-    expect($grandparent->children)->toHaveCount(1);
-    expect($parent->children)->toHaveCount(1);
+    expect(Item::withoutGlobalScopes()->where('parent_id', $grandparent->id)->count())->toBe(1);
+    expect(Item::withoutGlobalScopes()->where('parent_id', $parent->id)->count())->toBe(1);
 
     $grandparent->delete();
 

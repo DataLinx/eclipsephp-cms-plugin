@@ -5,14 +5,16 @@ namespace Eclipse\Cms\Admin\Filament\Resources;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\Pages;
 use Eclipse\Cms\Models\Banner\Position as BannerPosition;
+use Filament\Actions;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 
 class BannerPositionResource extends Resource implements HasShieldPermissions
 {
@@ -20,9 +22,9 @@ class BannerPositionResource extends Resource implements HasShieldPermissions
 
     protected static ?string $model = BannerPosition::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-photo';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-photo';
 
-    protected static ?string $navigationGroup = 'CMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'CMS';
 
     protected static ?string $modelLabel = 'Banner';
 
@@ -32,6 +34,7 @@ class BannerPositionResource extends Resource implements HasShieldPermissions
     {
         return [
             'view_any',
+            'view',
             'create',
             'update',
             'delete',
@@ -44,11 +47,12 @@ class BannerPositionResource extends Resource implements HasShieldPermissions
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Position')
+        return $schema
+            ->components([
+                Section::make('Position')
+                    ->columnSpanFull()
                     ->hidden(
                         fn (string $context): bool => ($context === 'view')
                     )
@@ -64,7 +68,8 @@ class BannerPositionResource extends Resource implements HasShieldPermissions
                             ->alphaDash(),
                     ]),
 
-                Forms\Components\Section::make('Image Types')
+                Section::make('Image Types')
+                    ->columnSpanFull()
                     ->hidden(
                         fn (string $context): bool => ($context === 'view')
                     )
@@ -131,17 +136,17 @@ class BannerPositionResource extends Resource implements HasShieldPermissions
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
+            ->recordActions([
+                Actions\ViewAction::make()
                     ->label('Manage banners'),
-                Tables\Actions\EditAction::make()
+                Actions\EditAction::make()
                     ->label('Edit position'),
-                Tables\Actions\DeleteAction::make()
+                Actions\DeleteAction::make()
                     ->label('Delete position'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
