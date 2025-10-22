@@ -7,16 +7,24 @@ use Eclipse\Cms\Factories\SectionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Translatable\HasTranslations;
 
 class Section extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasTranslations, SoftDeletes;
 
     protected $table = 'cms_sections';
 
-    protected $casts = [
-        'type' => SectionType::class,
+    public array $translatable = [
+        'name',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'type' => SectionType::class,
+        ];
+    }
 
     public function getFillable()
     {

@@ -35,8 +35,8 @@ it('belongs to a menu', function () {
 
 it('can have parent and children relationships', function () {
     $menu = Menu::factory()->create();
-    $parent = Item::factory()->create(['menu_id' => $menu->id]);
-    $child = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
+    $parent = Item::factory()->active()->create(['menu_id' => $menu->id]);
+    $child = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
 
     $childWithParent = Item::withoutGlobalScopes()->with('parent')->find($child->id);
     expect($childWithParent->parent)->toBeInstanceOf(Item::class)
@@ -195,8 +195,8 @@ it('has proper tree methods for sorting', function () {
 
 it('can get tree formatted name', function () {
     $menu = Menu::factory()->create();
-    $parent = Item::factory()->create(['menu_id' => $menu->id, 'label' => 'Parent']);
-    $child = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id, 'label' => 'Child']);
+    $parent = Item::factory()->active()->create(['menu_id' => $menu->id, 'label' => 'Parent']);
+    $child = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id, 'label' => 'Child']);
 
     $parentFormatted = $parent->getTreeFormattedName();
     $childFormatted = $child->getTreeFormattedName();
@@ -207,11 +207,11 @@ it('can get tree formatted name', function () {
 
 it('can get full path', function () {
     $menu = Menu::factory()->create();
-    $parent = Item::factory()->create([
+    $parent = Item::factory()->active()->create([
         'menu_id' => $menu->id,
         'label' => ['en' => 'Parent Label'],
     ]);
-    $child = Item::factory()->create([
+    $child = Item::factory()->active()->create([
         'menu_id' => $menu->id,
         'parent_id' => $parent->id,
         'label' => ['en' => 'Child Label'],
@@ -236,9 +236,9 @@ it('can get hierarchical options', function () {
 
 it('deleting parent item cascades to delete children', function () {
     $menu = Menu::factory()->create();
-    $parent = Item::factory()->create(['menu_id' => $menu->id]);
-    $child1 = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
-    $child2 = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
+    $parent = Item::factory()->active()->create(['menu_id' => $menu->id]);
+    $child1 = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
+    $child2 = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent->id]);
 
     expect(Item::withoutGlobalScopes()->where('parent_id', $parent->id)->count())->toBe(2);
     expect($child1->trashed())->toBeFalse();
