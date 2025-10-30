@@ -5,7 +5,6 @@ namespace Eclipse\Cms\Factories;
 use Eclipse\Cms\Enums\SectionType;
 use Eclipse\Cms\Models\Section;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -17,7 +16,7 @@ class SectionFactory extends Factory
     {
         $attrs = [
             'name' => Str::of($this->faker->words(asText: true))->ucwords(),
-            'type' => $this->faker->randomElement(Arr::pluck(SectionType::cases(), 'name')),
+            'type' => $this->faker->randomElement(SectionType::cases())->value,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];
