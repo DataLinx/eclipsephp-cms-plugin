@@ -5,8 +5,10 @@ namespace Eclipse\Cms\Admin\Filament\Resources;
 use Eclipse\Cms\Admin\Filament\Resources\SectionResource\Pages\CreateSection;
 use Eclipse\Cms\Admin\Filament\Resources\SectionResource\Pages\EditSection;
 use Eclipse\Cms\Admin\Filament\Resources\SectionResource\Pages\ListSections;
+use Eclipse\Cms\Enums\SectionType;
 use Eclipse\Cms\Models\Section;
 use Filament\Actions;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -35,7 +37,8 @@ class SectionResource extends Resource
                 TextInput::make('name')
                     ->required(),
 
-                TextInput::make('type')
+                Select::make('type')
+                    ->options(SectionType::class)
                     ->required(),
             ]);
     }
