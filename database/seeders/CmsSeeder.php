@@ -30,7 +30,7 @@ class CmsSeeder extends Seeder
     {
         $sections = Section::factory()
             ->forSite($tenant)
-            ->count(5)
+            ->count(2)
             ->create();
 
         $sections->each(function (Section $section): void {
@@ -48,7 +48,7 @@ class CmsSeeder extends Seeder
     protected function seedWithoutTenancy(): void
     {
         $sections = Section::factory()
-            ->count(5)
+            ->count(2)
             ->create();
 
         $sections->each(function (Section $section): void {

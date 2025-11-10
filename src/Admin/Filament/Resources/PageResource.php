@@ -13,7 +13,6 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -77,9 +76,9 @@ class PageResource extends Resource
 
                         TextInput::make('sef_key')
                             ->label('URL Slug')
-                            ->required()
                             ->maxLength(255)
                             ->placeholder('auto-generated-from-title')
+                            ->helperText('Leave empty to auto-generate from title')
                             ->columnSpan(2),
 
                         Select::make('status')
@@ -102,10 +101,15 @@ class PageResource extends Resource
                 Section::make('Content')
                     ->columnSpanFull()
                     ->schema([
-                        Textarea::make('short_text')
+                        RichEditor::make('short_text')
                             ->label('Short Description')
                             ->placeholder('Brief summary or excerpt...')
-                            ->rows(3)
+                            ->toolbarButtons([
+                                'bold',
+                                'italic',
+                                'underline',
+                                'link',
+                            ])
                             ->columnSpanFull(),
 
                         RichEditor::make('long_text')
