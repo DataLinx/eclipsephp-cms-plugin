@@ -19,11 +19,18 @@ class Section extends Model
     protected $table = 'cms_sections';
 
     public $translatable = ['name'];
-
-    protected $casts = [
-        'type' => SectionType::class,
-        'name' => 'array',
+  
+    public array $translatable = [
+        'name',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'type' => SectionType::class,
+            'name' => 'array',
+        ];
+    }
 
     public function getFillable()
     {

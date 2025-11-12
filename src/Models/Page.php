@@ -18,8 +18,17 @@ class Page extends Model
     use HasFactory, HasTranslations, IsSearchable, SoftDeletes;
 
     protected $table = 'cms_pages';
+  
+    use HasFactory, HasTranslations, SoftDeletes;
 
-    public $translatable = ['title', 'short_text', 'long_text', 'sef_key'];
+    protected $table = 'cms_pages';
+
+    public array $translatable = [
+        'title',
+        'short_text',
+        'long_text',
+        'sef_key'
+    ];
 
     protected $fillable = [
         'title',
