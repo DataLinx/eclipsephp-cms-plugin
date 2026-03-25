@@ -4,7 +4,6 @@ namespace Eclipse\Cms\Admin\Filament\Resources\BannerPositionResource\RelationMa
 
 use Eclipse\Cms\Models\Banner;
 use Eclipse\Cms\Rules\BannerImageDimensionRule;
-use Eclipse\Common\Filament\Tables\Columns\ImageColumn;
 use Eclipse\Common\Helpers\MediaHelper;
 use Filament\Actions;
 use Filament\Forms;
@@ -14,6 +13,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -45,7 +45,6 @@ class BannerRelationManager extends RelationManager
         return $imageTypes->map(function ($imageType) {
             return ImageColumn::make("image_type_{$imageType->id}")
                 ->label($imageType->name)
-                ->preview()
                 ->getStateUsing(function (Banner $record) use ($imageType) {
                     $locale = $this->activeLocale ?? app()->getLocale();
                     $image = $record->images->where('type_id', $imageType->id)->first();
@@ -64,12 +63,6 @@ class BannerRelationManager extends RelationManager
 
                     return null;
                 })
-                ->title(function (Banner $record) use ($imageType) {
-                    $locale = $this->activeLocale ?? app()->getLocale();
-
-                    return $record->getTranslation('name', $locale).' - '.$imageType->name;
-                })
-                ->link(fn (Banner $record) => $record->link ?? '#')
                 ->sortable(false);
         })->toArray();
     }

@@ -30,6 +30,8 @@ class BannerPositionResource extends Resource implements HasShieldPermissions
 
     protected static ?string $pluralModelLabel = 'Banners';
 
+    protected static ?int $navigationSort = 202;
+
     public static function getPermissionPrefixes(): array
     {
         return [

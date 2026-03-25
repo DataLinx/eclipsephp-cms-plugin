@@ -269,10 +269,10 @@ it('deleting parent item cascades to nested children recursively', function () {
 
 it('cascading delete only affects children, not siblings', function () {
     $menu = Menu::factory()->create();
-    $parent1 = Item::factory()->create(['menu_id' => $menu->id]);
-    $parent2 = Item::factory()->create(['menu_id' => $menu->id]);
-    $child1 = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent1->id]);
-    $child2 = Item::factory()->create(['menu_id' => $menu->id, 'parent_id' => $parent2->id]);
+    $parent1 = Item::factory()->active()->create(['menu_id' => $menu->id]);
+    $parent2 = Item::factory()->active()->create(['menu_id' => $menu->id]);
+    $child1 = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent1->id]);
+    $child2 = Item::factory()->active()->create(['menu_id' => $menu->id, 'parent_id' => $parent2->id]);
 
     $parent1->delete();
 

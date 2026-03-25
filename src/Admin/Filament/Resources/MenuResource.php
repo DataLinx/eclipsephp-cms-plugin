@@ -28,7 +28,7 @@ class MenuResource extends Resource implements HasShieldPermissions
 
     protected static string|\UnitEnum|null $navigationGroup = 'CMS';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 201;
 
     public static function form(Schema $schema): Schema
     {
