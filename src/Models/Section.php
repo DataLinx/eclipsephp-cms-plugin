@@ -18,8 +18,6 @@ class Section extends Model
 
     protected $table = 'cms_sections';
 
-    public $translatable = ['name'];
-  
     public array $translatable = [
         'name',
     ];
